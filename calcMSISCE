@@ -1,8 +1,17 @@
 function results = calcMSISCE(inputDir, varargin)
 % calcMSISCE
 %
-% Calculate Metastability index (MSI) and channel-wise
+% Calculate Metastability Index (MSI) and channel-wise
 % Synchrony Coalition Entropy (SCE) from EEG data.
+%
+% MSI in this implementation is defined as the temporal standard deviation
+% of the Kuramoto order parameter R(t), computed from instantaneous phase
+% across channels at each frequency.
+%
+% SCE is computed for each channel by thresholding phase differences
+% between the reference channel and all other channels, constructing
+% binary synchrony coalition patterns across time, and evaluating the
+% Shannon entropy of the pattern distribution.
 %
 % This function is intended for open-source use and avoids hard-coded paths.
 % It processes MATLAB .mat files containing an EEG structure with data in
@@ -37,19 +46,20 @@ function results = calcMSISCE(inputDir, varargin)
 %
 % OUTPUT
 %   results : struct with fields
-%       .subjectIds           [nSubjects x 1]
-%       .fileNames            {nSubjects x 1}
-%       .frequencies          [1 x nFreq]
-%       .threshold            scalar
-%       .sampleRate           scalar
-%       .channels             scalar
-%       .timeIndices          vector
-%       .nSCE                 [nSubjects x nChannels x nFreq]
-%       .meanSCE              [nSubjects x 1 x nFreq]
-%       .phaseDispersion      [nSubjects x 1 x nFreq]
-%       .patternValues        {nSubjects, nFreq, nChannels}
-%       .patternCounts        {nSubjects, nFreq, nChannels}
-%       .metadata             struct
+%       .subjectIds            [nSubjects x 1]
+%       .fileNames             {nSubjects x 1}
+%       .frequencies           [1 x nFreq]
+%       .threshold             scalar
+%       .sampleRate            scalar
+%       .channels              scalar
+%       .timeIndices           vector
+%       .MSI                   [nSubjects x 1 x nFreq]
+%       .globalSynchrony       [nSubjects x 1 x nFreq]
+%       .nSCE                  [nSubjects x nChannels x nFreq]
+%       .meanSCE               [nSubjects x 1 x nFreq]
+%       .patternValues         {nSubjects, nFreq, nChannels}
+%       .patternCounts         {nSubjects, nFreq, nChannels}
+%       .metadata              struct
 %
 % NOTE
 %   This function assumes each input file contains one continuous recording
@@ -153,9 +163,10 @@ end
 % -------------------------------------------------------------------------
 subjectIds      = nan(nSubjects, 1);
 fileNames       = cell(nSubjects, 1);
+MSI             = nan(nSubjects, 1, nFreq);
+globalSynchrony = nan(nSubjects, 1, nFreq);
 nSCE            = nan(nSubjects, nCh, nFreq);
 meanSCE         = nan(nSubjects, 1, nFreq);
-phaseDispersion = nan(nSubjects, 1, nFreq);
 
 patternValues   = cell(nSubjects, nFreq, nCh);
 patternCounts   = cell(nSubjects, nFreq, nCh);
@@ -175,14 +186,15 @@ end
 % -------------------------------------------------------------------------
 if opt.UseParallel
     parfor s = 1:nSubjects
-        [subjectIds(s), fileNames{s}, nSCE_subj, meanSCE_subj, phaseDisp_subj, ...
-            patternValues_subj, patternCounts_subj] = processOneFile( ...
+        [subjectIds(s), fileNames{s}, MSI_subj, globalSync_subj, nSCE_subj, ...
+            meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
-        
+
+        MSI(s,1,:) = MSI_subj;
+        globalSynchrony(s,1,:) = globalSync_subj;
         nSCE(s,:,:) = nSCE_subj;
         meanSCE(s,1,:) = meanSCE_subj;
-        phaseDispersion(s,1,:) = phaseDisp_subj;
-        
+
         for f = 1:nFreq
             for ch = 1:nCh
                 patternValues{s,f,ch} = patternValues_subj{f,ch};
@@ -192,14 +204,15 @@ if opt.UseParallel
     end
 else
     for s = 1:nSubjects
-        [subjectIds(s), fileNames{s}, nSCE_subj, meanSCE_subj, phaseDisp_subj, ...
-            patternValues_subj, patternCounts_subj] = processOneFile( ...
+        [subjectIds(s), fileNames{s}, MSI_subj, globalSync_subj, nSCE_subj, ...
+            meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
-        
+
+        MSI(s,1,:) = MSI_subj;
+        globalSynchrony(s,1,:) = globalSync_subj;
         nSCE(s,:,:) = nSCE_subj;
         meanSCE(s,1,:) = meanSCE_subj;
-        phaseDispersion(s,1,:) = phaseDisp_subj;
-        
+
         for f = 1:nFreq
             for ch = 1:nCh
                 patternValues{s,f,ch} = patternValues_subj{f,ch};
@@ -220,9 +233,11 @@ results.threshold = opt.Threshold;
 results.sampleRate = opt.SampleRate;
 results.channels = nCh;
 results.timeIndices = opt.TimeIndices;
+
+results.MSI = MSI;
+results.globalSynchrony = globalSynchrony;
 results.nSCE = nSCE;
 results.meanSCE = meanSCE;
-results.phaseDispersion = phaseDispersion;
 results.patternValues = patternValues;
 results.patternCounts = patternCounts;
 
@@ -238,6 +253,8 @@ results.metadata.csdBasisFile = csdBasisFile;
 results.metadata.waveletCycles = opt.WaveletCycles;
 results.metadata.useParallel = logical(opt.UseParallel);
 results.metadata.generatedAt = datestr(now, 30);
+results.metadata.msiDefinition = 'Temporal standard deviation of the Kuramoto order parameter R(t)';
+results.metadata.sceDefinition = 'Normalized Shannon entropy of channel-wise binary synchrony coalition patterns';
 
 % -------------------------------------------------------------------------
 % Optional save
@@ -250,7 +267,7 @@ if opt.SaveResults
         mkdir(outputDir);
     end
     save(fullfile(outputDir, outputFileName), 'results', '-v7.3');
-    
+
     if opt.Verbose
         fprintf('Saved results to: %s\n', fullfile(outputDir, outputFileName));
     end
@@ -265,8 +282,8 @@ end
 % =========================================================================
 % Helper function
 % =========================================================================
-function [subjectId, fileName, nSCE_subj, meanSCE_subj, phaseDisp_subj, ...
-          patternValues_subj, patternCounts_subj] = processOneFile( ...
+function [subjectId, fileName, MSI_subj, globalSync_subj, nSCE_subj, ...
+          meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
           fileInfo, inputDir, dataVariable, dataField, opt, freqs, nCh)
 
 fileName = fileInfo.name;
@@ -309,7 +326,6 @@ end
 
 data = data(:, timeIdx);
 
-% Subject ID from filename; falls back to file index string if unavailable
 tok = regexp(fileName, '\d+', 'match');
 if isempty(tok)
     subjectId = NaN;
@@ -318,9 +334,10 @@ else
 end
 
 nFreq = numel(freqs);
+MSI_subj = nan(1, nFreq);
+globalSync_subj = nan(1, nFreq);
 nSCE_subj = nan(nCh, nFreq);
 meanSCE_subj = nan(1, nFreq);
-phaseDisp_subj = nan(1, nFreq);
 
 patternValues_subj = cell(nFreq, nCh);
 patternCounts_subj = cell(nFreq, nCh);
@@ -345,41 +362,45 @@ for f = 1:nFreq
         error('izmy_gbweeg returned unexpected channel dimension for file "%s".', fileName);
     end
 
-    numDataPoints = size(cwtData, 2);
+    % ---------------------------------------------------------------------
+    % MSI: temporal variability of Kuramoto order parameter
+    % ---------------------------------------------------------------------
+    phaseData = angle(cwtData);                      % [channels x time]
+    orderParameter = abs(mean(exp(1i * phaseData), 1));   % [1 x time]
 
-    % phase difference tensor
+    MSI_subj(f) = std(orderParameter, 0, 2, 'omitnan');
+    globalSync_subj(f) = mean(orderParameter, 2, 'omitnan');
+
+    % ---------------------------------------------------------------------
+    % SCE: channel-wise synchrony coalition entropy
+    % ---------------------------------------------------------------------
+    numDataPoints = size(cwtData, 2);
     cwt3d = reshape(cwtData, [nCh, 1, numDataPoints]);
     cwt3dRep = repmat(cwt3d, [1, nCh, 1]);
     phaseDiff = angle(cwt3dRep ./ permute(cwt3dRep, [2, 1, 3]));
 
-    % simple phase-dispersion summary (mean circular spread across pairs)
-    phaseDisp_subj(f) = mean(std(phaseDiff, 0, 3), 'all', 'omitnan');
-
-    % binary synchrony matrix
     binaryData = abs(phaseDiff) < opt.Threshold;
-
-    % channel-wise coalition entropy
     scePerChannel = nan(nCh, 1);
 
     for ch = 1:nCh
-        coalition = squeeze(binaryData(ch,:,:));       % [nCh x time]
-        coalition(ch,:) = [];                          % remove self-channel
+        coalition = squeeze(binaryData(ch,:,:));   % [nCh x time]
+        coalition(ch,:) = [];                      % remove self-channel
         nPartners = size(coalition, 1);
 
         if nPartners > 64
             error(['Current implementation uses uint64 pattern encoding and supports ', ...
-                   'up to 64 coalition bits. Requested channel count is too large.']);
+                   'at most 64 coalition bits. Requested channel count is too large.']);
         end
 
-        decdata = binaryRowsToUint64(coalition');      % [time x 1]
+        decdata = binaryRowsToUint64(coalition');  % [time x 1]
         [patVals, ~, idxPat] = unique(decdata, 'stable');
         patCounts = accumarray(idxPat, 1);
 
         P = patCounts ./ sum(patCounts);
         sceBits = -sum(P .* log2(P), 'omitnan');
 
-        % normalized by maximum possible entropy for this channel
-        % max entropy = log2(number of possible coalition states)
+        % number of possible coalition states = 2^(nPartners)
+        % therefore max entropy in bits = log2(2^(nPartners)) = nPartners
         maxEntropy = nPartners;
         scePerChannel(ch) = sceBits / maxEntropy;
 
@@ -409,7 +430,7 @@ if nBits > 64
     error('binaryRowsToUint64 supports at most 64 bits.');
 end
 
-powers = uint64(2) .^ uint64((nBits-1):-1:0);
+powers = uint64(2) .^ uint64((nBits - 1):-1:0);
 decdata = sum(uint64(rows) .* powers, 2, 'native');
 
 if numel(decdata) ~= nRows
