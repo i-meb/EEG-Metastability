@@ -1,21 +1,62 @@
 # EEG-Metastability
 
-# This script calculates the MSI (Metastability Index) and SCE (Synchrony Coalition Entropy) from EEG data for Linux. 
+MATLAB code for calculating EEG-derived metastability-related measures, including channel-wise **Synchrony Coalition Entropy (SCE)** and a phase-dispersion summary, from preprocessed continuous EEG recordings.
 
-It performs the following steps:
-  1. Load EEG data for multiple subjects.
-  2. Apply Current Source Density (CSD) transformation to preprocess EEG data.
-  3. Perform Wavelet Transform to calculate the instantaneous phase of the EEG signals.
-  4. Calculate MSI, which quantifies phase dispersion across electrodes.
-  5. Calculate SCE, which measures phase synchrony patterns between electrodes and over frequency bands.
+This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
 
-Terms:
- - EEG data to be loaded is after noise rejection.
- - CSD: A preprocessing technique to highlight local activity and reduce volume conduction effects.
- - Wavelet Transform: A method to decompose a signal into frequency components, used here to calculate the phase.
- - MSI: A measure of the variability of phase differences across electrodes.
- - SCE: A measure of phase synchrony patterns across electrodes and their entropy.
+---
 
-Data:
- - EEG data is loaded from files named 'sub_*_r.mat'.
- - Results are saved as .mat files in the specified output directory.
+## Overview
+
+This pipeline performs the following steps for each subject and frequency bin:
+
+1. Load preprocessed EEG data from `.mat` files
+2. Optionally apply **Current Source Density (CSD)** transformation
+3. Compute complex wavelet coefficients using `izmy_gbweeg.m`
+4. Extract instantaneous phase
+5. Build binary synchrony coalitions using a phase-difference threshold
+6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
+7. Save per-subject and per-frequency results
+
+---
+
+## Features
+
+- Frequency-resolved analysis
+- Channel-wise SCE output
+- Optional CSD preprocessing
+- Batch processing of multiple subjects
+- Parallel processing support (`parfor`)
+- Structured output suitable for downstream statistics
+
+---
+
+## Requirements
+
+### MATLAB
+Tested in MATLAB with standard numeric and parallel computing functionality.
+
+### Required external dependencies
+This repository does **not** bundle all third-party dependencies. You need:
+
+- **EEGLAB**  
+  Required for `eegfilt`
+
+- **CSD toolbox / CSDconvert function**  
+  Required only if `UseCSD = true`
+
+- **CSD basis file**  
+  Example parameter: `CSDbasis.mat`
+
+### Included in this repository
+- `calcMSISCE.m`
+- `izmy_gbweeg.m`
+
+---
+
+## Input data format
+
+Each input file must be a `.mat` file containing an EEG structure:
+
+```matlab
+EEG.data
