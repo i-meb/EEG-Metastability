@@ -1,7 +1,7 @@
 function results = calcMSISCE(inputDir, varargin)
 % calcMSISCE
 %
-% Calculate MSI-like phase-dispersion summary and channel-wise
+% Calculate Metastability index (MSI) and channel-wise
 % Synchrony Coalition Entropy (SCE) from EEG data.
 %
 % This function is intended for open-source use and avoids hard-coded paths.
