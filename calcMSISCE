@@ -4,9 +4,8 @@ function results = calcMSISCE(inputDir, varargin)
 % Calculate Metastability Index (MSI) and channel-wise
 % Synchrony Coalition Entropy (SCE) from EEG data.
 %
-% MSI in this implementation is defined as the temporal standard deviation
-% of the Kuramoto order parameter R(t), computed from instantaneous phase
-% across channels at each frequency.
+% In this implementation, MSI is defined as the temporal standard deviation
+% of network-wide phase synchrony across channels at each frequency.
 %
 % SCE is computed for each channel by thresholding phase differences
 % between the reference channel and all other channels, constructing
@@ -54,7 +53,6 @@ function results = calcMSISCE(inputDir, varargin)
 %       .channels              scalar
 %       .timeIndices           vector
 %       .MSI                   [nSubjects x 1 x nFreq]
-%       .globalSynchrony       [nSubjects x 1 x nFreq]
 %       .nSCE                  [nSubjects x nChannels x nFreq]
 %       .meanSCE               [nSubjects x 1 x nFreq]
 %       .patternValues         {nSubjects, nFreq, nChannels}
@@ -71,9 +69,6 @@ function results = calcMSISCE(inputDir, varargin)
 %       'SaveResults', true, ...
 %       'UseCSD', true, ...
 %       'CSDBasisFile', './CSDbasis.mat');
-%
-% AUTHOR
-%   Open-source refactoring draft for the EEG-Metastability repository.
 
 % -------------------------------------------------------------------------
 % Parse inputs
@@ -161,15 +156,14 @@ end
 % -------------------------------------------------------------------------
 % Preallocate outputs
 % -------------------------------------------------------------------------
-subjectIds      = nan(nSubjects, 1);
-fileNames       = cell(nSubjects, 1);
-MSI             = nan(nSubjects, 1, nFreq);
-globalSynchrony = nan(nSubjects, 1, nFreq);
-nSCE            = nan(nSubjects, nCh, nFreq);
-meanSCE         = nan(nSubjects, 1, nFreq);
+subjectIds    = nan(nSubjects, 1);
+fileNames     = cell(nSubjects, 1);
+MSI           = nan(nSubjects, 1, nFreq);
+nSCE          = nan(nSubjects, nCh, nFreq);
+meanSCE       = nan(nSubjects, 1, nFreq);
 
-patternValues   = cell(nSubjects, nFreq, nCh);
-patternCounts   = cell(nSubjects, nFreq, nCh);
+patternValues = cell(nSubjects, nFreq, nCh);
+patternCounts = cell(nSubjects, nFreq, nCh);
 
 % -------------------------------------------------------------------------
 % Start parallel pool if requested
@@ -186,12 +180,11 @@ end
 % -------------------------------------------------------------------------
 if opt.UseParallel
     parfor s = 1:nSubjects
-        [subjectIds(s), fileNames{s}, MSI_subj, globalSync_subj, nSCE_subj, ...
+        [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
 
         MSI(s,1,:) = MSI_subj;
-        globalSynchrony(s,1,:) = globalSync_subj;
         nSCE(s,:,:) = nSCE_subj;
         meanSCE(s,1,:) = meanSCE_subj;
 
@@ -204,12 +197,11 @@ if opt.UseParallel
     end
 else
     for s = 1:nSubjects
-        [subjectIds(s), fileNames{s}, MSI_subj, globalSync_subj, nSCE_subj, ...
+        [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
 
         MSI(s,1,:) = MSI_subj;
-        globalSynchrony(s,1,:) = globalSync_subj;
         nSCE(s,:,:) = nSCE_subj;
         meanSCE(s,1,:) = meanSCE_subj;
 
@@ -235,7 +227,6 @@ results.channels = nCh;
 results.timeIndices = opt.TimeIndices;
 
 results.MSI = MSI;
-results.globalSynchrony = globalSynchrony;
 results.nSCE = nSCE;
 results.meanSCE = meanSCE;
 results.patternValues = patternValues;
@@ -253,7 +244,7 @@ results.metadata.csdBasisFile = csdBasisFile;
 results.metadata.waveletCycles = opt.WaveletCycles;
 results.metadata.useParallel = logical(opt.UseParallel);
 results.metadata.generatedAt = datestr(now, 30);
-results.metadata.msiDefinition = 'Temporal standard deviation of the Kuramoto order parameter R(t)';
+results.metadata.msiDefinition = 'Temporal standard deviation of network-wide phase synchrony';
 results.metadata.sceDefinition = 'Normalized Shannon entropy of channel-wise binary synchrony coalition patterns';
 
 % -------------------------------------------------------------------------
@@ -282,7 +273,7 @@ end
 % =========================================================================
 % Helper function
 % =========================================================================
-function [subjectId, fileName, MSI_subj, globalSync_subj, nSCE_subj, ...
+function [subjectId, fileName, MSI_subj, nSCE_subj, ...
           meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
           fileInfo, inputDir, dataVariable, dataField, opt, freqs, nCh)
 
@@ -335,7 +326,6 @@ end
 
 nFreq = numel(freqs);
 MSI_subj = nan(1, nFreq);
-globalSync_subj = nan(1, nFreq);
 nSCE_subj = nan(nCh, nFreq);
 meanSCE_subj = nan(1, nFreq);
 
@@ -363,13 +353,11 @@ for f = 1:nFreq
     end
 
     % ---------------------------------------------------------------------
-    % MSI: temporal variability of Kuramoto order parameter
+    % MSI: temporal variability of network-wide phase synchrony
     % ---------------------------------------------------------------------
-    phaseData = angle(cwtData);                      % [channels x time]
-    orderParameter = abs(mean(exp(1i * phaseData), 1));   % [1 x time]
-
-    MSI_subj(f) = std(orderParameter, 0, 2, 'omitnan');
-    globalSync_subj(f) = mean(orderParameter, 2, 'omitnan');
+    phaseData = angle(cwtData);                         % [channels x time]
+    synchrony_t = abs(mean(exp(1i * phaseData), 1));    % [1 x time]
+    MSI_subj(f) = std(synchrony_t, 0, 2, 'omitnan');
 
     % ---------------------------------------------------------------------
     % SCE: channel-wise synchrony coalition entropy
@@ -400,7 +388,7 @@ for f = 1:nFreq
         sceBits = -sum(P .* log2(P), 'omitnan');
 
         % number of possible coalition states = 2^(nPartners)
-        % therefore max entropy in bits = log2(2^(nPartners)) = nPartners
+        % therefore max entropy in bits = nPartners
         maxEntropy = nPartners;
         scePerChannel(ch) = sceBits / maxEntropy;
 
