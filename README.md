@@ -243,4 +243,5 @@ Without a license, others may be unable to legally reuse the code.
 
 ## Contact
 Maintainer: Mebuki Izumiya mebuki@nips.ac.jp
+
 If you publish work using this repository, a GitHub issue or citation is appreciated.
