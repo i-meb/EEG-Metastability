@@ -95,7 +95,17 @@ results = calcMSISCE('./data', ...
     'CSDBasisFile', './CSDbasis.mat');
 ```
 
----
+### Example dataset
+
+A small toy dataset is provided for demonstration purposes.
+
+### Files
+
+- `example_data/sub_001.mat`  
+- `examples/make_example_dataset.m`
+- `examples/run_example.m`
+
+The example dataset contains a MATLAB structure:
 
 # Main function
 ```matlab
