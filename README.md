@@ -5,7 +5,7 @@
 ![Research Code](https://img.shields.io/badge/type-research%20code-informational)
 ![License](https://img.shields.io/badge/license-BSD%203--Clause-orange)
 
-MATLAB code for calculating EEG-derived metastability-related measures, including channel-wise **Synchrony Coalition Entropy (SCE)** and **Metastability index (MSI)**, from preprocessed continuous EEG recordings.
+MATLAB code for calculating EEG metastability-related measures, including channel-wise **Synchrony Coalition Entropy (SCE)** and **Metastability index (MSI)**, from preprocessed continuous EEG recordings.
 
 This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
 <div align="left">
