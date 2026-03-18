@@ -24,7 +24,7 @@ function results = calcMSISCE(inputDir, varargin)
 % INPUT
 %   inputDir : directory containing EEG .mat files
 %
-% NAME-VALUE PAIRS
+% PARAMETERS
 %   'FilePattern'        : filename pattern (default: 'sub_*.mat')
 %   'OutputDir'          : directory to save output (default: '')
 %   'SaveResults'        : true/false (default: false)
