@@ -238,8 +238,7 @@ If you use this code in academic work, please cite:
 1. This repository (https://github.com/i-meb/EEG-Metastability)
 2. Shanahan M. Metastable chimera states in community-structured oscillator networks. Chaos. 2010;20(1):013108.
 3. Delorme A & Makeig S (2004) EEGLAB: an open-source toolbox for analysis of single-trial EEG dynamics, Journal of Neuroscience Methods 134:9-21.
-4. Any CSD toolbox or basis file source you use
-You may also want to add a `CITATION.cff` file to this repository.
+Please cite this repository using the metadata provided in [`CITATION.cff`](./CITATION.cff).
 
 ---
 
