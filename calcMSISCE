@@ -384,7 +384,7 @@ for f = 1:nFreq
         [patVals, ~, idxPat] = unique(decdata, 'stable');
         patCounts = accumarray(idxPat, 1);
 
-        P = patCounts ./ sum(patCounts);
+        P = patCounts ./ numel(opt.TimeIndices);
         sceBits = -sum(P .* log2(P), 'omitnan');
 
         % number of possible coalition states = 2^(nPartners)
