@@ -357,7 +357,7 @@ for f = 1:nFreq
     % ---------------------------------------------------------------------
     phaseData = angle(cwtData);                         % [channels x time]
     synchrony_t = abs(mean(exp(1i * phaseData), 1));    % [1 x time]
-    MSI_subj(f) = std(synchrony_t, 0, 2, 'omitnan');
+    MSI_subj(f) = var(synchrony_t, 0, 2, 'omitnan');
 
     % ---------------------------------------------------------------------
     % SCE: channel-wise synchrony coalition entropy
@@ -390,7 +390,7 @@ for f = 1:nFreq
         % number of possible coalition states = 2^(nPartners)
         % therefore max entropy in bits = nPartners
         maxEntropy = nPartners;
-        scePerChannel(ch) = sceBits / maxEntropy;
+        scePerChannel(ch) = sceBits / nCh;
 
         patternValues_subj{f, ch} = patVals;
         patternCounts_subj{f, ch} = patCounts;
