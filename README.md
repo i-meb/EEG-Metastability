@@ -232,26 +232,29 @@ EEG-Metastability/
     └── sub_001.mat           % user-provided, not included in repo
 ```
 ---
+
 # Citation
 If you use this code in academic work, please cite:
-1. This repository
-2. Shanahan
-3. EEGLAB
+1. This repository (https://github.com/i-meb/EEG-Metastability)
+2. Shanahan M. Metastable chimera states in community-structured oscillator networks. Chaos. 2010;20(1):013108.
+3. Delorme A & Makeig S (2004) EEGLAB: an open-source toolbox for analysis of single-trial EEG dynamics, Journal of Neuroscience Methods 134:9-21.
 4. Any CSD toolbox or basis file source you use
 You may also want to add a `CITATION.cff` file to this repository.
 
 ---
 
 # License
-Please add an explicit open-source license before broad public reuse.
-Recommended options:
-- `MIT` for maximum reuse
-- `BSD-3-Clause` for permissive academic/software reuse
-Without a license, others may be unable to legally reuse the code.
+This project is released under the **BSD 3-Clause License**.
+This is a permissive open-source license that allows redistribution and use in both source and binary forms, with or without modification.
+
+- The original copyright notice and license must be retained  
+- Proper attribution to the original author must be maintained  
+- The names of the authors or affiliated institutions must not be used to endorse or promote derived products without prior permission  
+- The authors are not liable for any damages arising from the use of this software.
+- If you use this code in academic work, please consider citing the repository and relevant publications.
 
 ---
 
 ## Contact
 Maintainer: Mebuki Izumiya mebuki@nips.ac.jp
 
-If you publish work using this repository, a GitHub issue or citation is appreciated.
