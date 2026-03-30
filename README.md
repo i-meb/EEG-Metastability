@@ -18,12 +18,11 @@ This repository is intended for researchers who want to quantify frequency-speci
 This pipeline performs the following steps for each subject and frequency bin:
 
 1. Load preprocessed EEG data from `.mat` files
-2. Optionally apply **Current Source Density (CSD)** transformation
-3. Compute complex wavelet coefficients using `izmy_gbweeg.m`
-4. Extract instantaneous phase
-5. Build binary synchrony coalitions using a phase-difference threshold
-6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
-7. Save per-subject and per-frequency results
+2. Compute complex wavelet coefficients using `izmy_gbweeg.m`
+3. Extract instantaneous phase
+4. Build binary synchrony coalitions using a phase-difference threshold
+5. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
+6. Save per-subject and per-frequency results
 
 ---
 
@@ -31,10 +30,8 @@ This pipeline performs the following steps for each subject and frequency bin:
 
 - Frequency-resolved analysis
 - Channel-wise SCE output
-- Optional CSD preprocessing
 - Batch processing of multiple subjects
 - Parallel processing support (`parfor`)
-- Structured output suitable for downstream statistics
 
 ---
 
@@ -48,12 +45,6 @@ This repository does **not** bundle all third-party dependencies. You need:
 
 - **EEGLAB**  
   Required for `eegfilt`
-
-- **CSD toolbox / CSDconvert function**  
-  Required only if `UseCSD = true`
-
-- **CSD basis file**  
-  Example parameter: `CSDbasis.mat`
 
 ### Included in this repository
 - `calcMSISCE.m`
@@ -74,14 +65,18 @@ with shape:
 [channels x timepoints]
 ```
 
+The input data should be continuous EEG.
+As a preprocessing, we recommend applying Current source density (CSD) by external toolbox and it was not included this repository.
+
 ## Default assumptions
 
-- Files are named like `sub_001.mat`, `sub_002.mat`, etc.
+- Files are named like `sub_001.mat` etc.
 - Data are already preprocessed
 - Noise/artifact rejection has already been completed
 - Data are continuous, not epoched
 - Default number of channel is 63
 - Default sampling rate is 1000 Hz
+
 If you dataset uses different names or formats, you can change them via function arguments.
 
 ---
@@ -90,9 +85,7 @@ If you dataset uses different names or formats, you can change them via function
 ```matlab
 results = calcMSISCE('./data', ...
     'OutputDir', './results', ...
-    'SaveResults', true, ...
-    'UseCSD', true, ...
-    'CSDBasisFile', './CSDbasis.mat');
+    'SaveResults', true);
 ```
 
 ### Example dataset
@@ -128,8 +121,6 @@ results = calcMSISCE(inputDir, Name, Value, ...)
 | `FrequencyRange` | Center frequencies to analyze | `1:47` |
 | `BandWidth` | Band-pass width in Hz | `1` |
 | `Threshold` | Phase-difference threshold (radians) | `1.2` |
-| `UseCSD` | Apply CSD transform | `true` |
-| `CSDBasisFile` | Path to CSD basis file | `'CSDbasis.mat'` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
 | `UseParallel` | Use `parfor` if available | `true` |
 | `Verbose` | Print progress messages | `true` |
@@ -163,22 +154,22 @@ The function returns a struct named `results` with the following fields.
 ### 1. Filtering
 For each frequency bin, the signal is band-pass filtered using `eegfilt`.
 
-### 2. CSD transform
-If enabled, Current Source Density transformation is applied to reduce volume conduction effects and emphasize local activity.
-
-### 3. Wavelet transform
+### 2. Wavelet transformation
 `izmy_gbweeg.m` computes complex wavelet coefficients for each channel.
 
-### 4. Phase extraction
+### 3. Phase extraction
 Instantaneous phase is extracted from the complex-valued wavelet output.
 
-### 5. Synchrony coalition
-For each channel and time point, all pairwise phase differences are thresholded:
+### 4. MSI calculation
+At each time point, a network-wide phase synchrony value is computed across channels.  
+MSI is defined as the temporal variability (variance) of this synchrony over time.
+
+### 5. SCE calculation 
+For SCE calculation, synchrony coalition was made which is all pairwise phase differences are thresholded for each channel and time point:
 
 - synchronized = `1` if `abs(phase difference) < threshold`
 - unsynchronized = `0` otherwise
 
-### 6. Entropy calculation
 For each channel, the time series of binary coalition states is converted into discrete patterns.  
 The probability distribution of these coalition states is used to compute Shannon entropy in bits, then normalized.
 
@@ -193,8 +184,6 @@ results = calcMSISCE('./data', ...
     'Channels', 63, ...
     'FrequencyRange', 1:47, ...
     'Threshold', 1.2, ...
-    'UseCSD', true, ...
-    'CSDBasisFile', './CSDbasis.mat', ...
     'SaveResults', true, ...
     'OutputDir', './results');
 ```
@@ -225,9 +214,9 @@ EEG-Metastability/
 ├── calcMSISCE.m
 ├── izmy_gbweeg.m
 ├── README.md
-├── CSDbasis.mat              % not tracked if license/distribution is restricted
 ├── examples/
-│   └── run_example.m
+    └── run_example.m
+    └── make_example_eeg.m    % make dummy eeg data
 └── data/
     └── sub_001.mat           % user-provided, not included in repo
 ```
@@ -257,4 +246,9 @@ This is a permissive open-source license that allows redistribution and use in b
 
 ## Contact
 Maintainer: Mebuki Izumiya mebuki@nips.ac.jp
+
+            Division of Neural Dynamics
+            National Institute for Physiological Sciences, National Institutes of Natural Sciences
+            38 Nishigonaka, Myodaiji, Okazaki, Aichi 444-8585, JAPAN
+            Tel: +81-564-55-7751, FAX: +81-564-55-7754
 
