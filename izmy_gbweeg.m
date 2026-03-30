@@ -19,12 +19,3 @@ function h=izmy_gbweeg(data,freq,sample_rate,nco)
         h(channels,:) = temp;
     end
 end
-%     convdata=data;
-%     
-%     ch=1;
-%     trial=1;
-% 
-%     temp=conv(data(ch,:,trial),mother);
-%     convdata(ch,:,trial)=temp(windowlength+1:(end-windowlength));
-%     h(i,:)=convdata;
-% end
