@@ -9,7 +9,7 @@ MATLAB code for calculating EEG metastability-related measures, including channe
 
 This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
 <div align="left">
-  <img src="./doc/pipeline.jpg" alt="Logo" width="400">
+  <img src="./docs/pipeline.jpg" alt="Logo" width="400">
 </div>
 
 
@@ -20,15 +20,17 @@ This pipeline performs the following steps for each subject and frequency bin:
 1. Load preprocessed EEG data from `.mat` files
 2. Compute complex wavelet coefficients using `izmy_gbweeg.m`
 3. Extract instantaneous phase
-4. Build binary synchrony coalitions using a phase-difference threshold
-5. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
-6. Save per-subject and per-frequency results
+4. Compute **channel-wide Metastability index (MSI)**
+5. Build binary synchrony coalitions using a phase-difference threshold
+6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
+7. Save per-subject and per-frequency results
 
 ---
 
 ## Features
 
 - Frequency-resolved analysis
+- Channel-wide MSI output
 - Channel-wise SCE output
 - Batch processing of multiple subjects
 - Parallel processing support (`parfor`)
@@ -94,11 +96,12 @@ A small toy dataset is provided for demonstration purposes.
 
 ### Files
 
+The example dataset contains a MATLAB structure:
 - `example_data/sub_001.mat`  
 - `examples/make_example_dataset.m`
 - `examples/run_example.m`
 
-The example dataset contains a MATLAB structure:
+
 
 # Main function
 ```matlab
@@ -142,7 +145,6 @@ The function returns a struct named `results` with the following fields.
 | `timeIndices` | Time samples used |
 | `nSCE` | Channel-wise normalized SCE, shape `[subjects x channels x frequencies]` |
 | `meanSCE` | Mean SCE across channels, shape `[subjects x 1 x frequencies]` |
-| `phaseDispersion` | Phase-dispersion summary, shape `[subjects x 1 x frequencies]` |
 | `patternValues` | Unique coalition patterns for each subject/frequency/channel |
 | `patternCounts` | Counts for each coalition pattern |
 | `metadata` | Analysis settings and provenance information |
