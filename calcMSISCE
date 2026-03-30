@@ -117,10 +117,6 @@ if isempty(files)
     error('No files matching pattern "%s" were found in: %s', filePattern, inputDir);
 end
 
-if isfield(opt, 'UseCSD')
-    error('CSD is not supported in this version. Apply it externally.');
-end
-
 if exist('izmy_gbweeg', 'file') ~= 2
     error('Required function "izmy_gbweeg.m" was not found on the MATLAB path.');
 end
@@ -230,7 +226,7 @@ results.metadata.bandWidth = opt.BandWidth;
 results.metadata.waveletCycles = opt.WaveletCycles;
 results.metadata.useParallel = logical(opt.UseParallel);
 results.metadata.generatedAt = datestr(now, 30);
-results.metadata.msiDefinition = 'Temporal standard deviation of network-wide phase synchrony';
+results.metadata.msiDefinition = 'Temporal variance of network-wide phase synchrony';
 results.metadata.sceDefinition = 'Normalized Shannon entropy of channel-wise binary synchrony coalition patterns';
 
 % -------------------------------------------------------------------------
