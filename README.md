@@ -20,7 +20,7 @@ This pipeline performs the following steps for each subject and frequency bin:
 1. Load preprocessed EEG data from `.mat` files
 2. Compute complex wavelet coefficients using `izmy_gbweeg.m`
 3. Extract instantaneous phase
-4. Compute **channel-wide Metastability index (MSI)**
+4. Compute **network-wide Metastability index (MSI)**
 5. Build binary synchrony coalitions using a phase-difference threshold
 6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
 7. Save per-subject and per-frequency results
@@ -30,7 +30,7 @@ This pipeline performs the following steps for each subject and frequency bin:
 ## Features
 
 - Frequency-resolved analysis
-- Channel-wide MSI output
+- Network-wide MSI output
 - Channel-wise SCE output
 - Batch processing of multiple subjects
 - Parallel processing support (`parfor`)
