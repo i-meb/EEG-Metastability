@@ -4,7 +4,7 @@ function results = calcMSISCE(inputDir, varargin)
 % Calculate Metastability Index (MSI) and channel-wise
 % Synchrony Coalition Entropy (SCE) from EEG data.
 %
-% In this implementation, MSI is defined as the temporal standard deviation
+% In this implementation, MSI is defined as the temporal variance
 % of network-wide phase synchrony across channels at each frequency.
 %
 % SCE is computed for each channel by thresholding phase differences
@@ -361,7 +361,8 @@ for f = 1:nFreq
         [patVals, ~, idxPat] = unique(decdata, 'stable');
         patCounts = accumarray(idxPat, 1);
 
-        P = patCounts ./ numel(opt.TimeIndices);
+        P = patCounts ./ size(coalition, 2);
+        % P = patCounts ./ numel(opt.TimeIndices);  % 削除してよい
         sceBits = -sum(P .* log2(P), 'omitnan');
 
         % number of possible coalition states = 2^(nPartners)
