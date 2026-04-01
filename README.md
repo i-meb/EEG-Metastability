@@ -68,7 +68,7 @@ with shape:
 ```
 
 The input data should be continuous EEG.
-As a preprocessing, we recommend applying Current source density (CSD) by external toolbox and it was not included this repository.
+If needed, current source density (CSD) should be applied externally during preprocessing. CSD is not included in this repository.
 
 ## Default assumptions
 
@@ -95,13 +95,18 @@ results = calcMSISCE('./data', ...
 A small toy dataset is provided for demonstration purposes.
 
 ### Files
-
-The example dataset contains a MATLAB structure:
-- `example_data/sub_001.mat`  
-- `examples/make_example_dataset.m`
+- `example_data/sub_001.mat`
+- `examples/make_example_eeg.m`
 - `examples/run_example.m`
 
-
+The example dataset contains a MATLAB structure:
+```matlab
+EEG.data
+```
+with shape:
+```matlab
+[channels x timepoints]
+```
 
 # Main function
 ```matlab
@@ -143,6 +148,7 @@ The function returns a struct named `results` with the following fields.
 | `sampleRate` | Sampling rate |
 | `channels` | Number of analyzed channels |
 | `timeIndices` | Time samples used |
+| `MSI` | Network-wide MSI, shape `[subjects x 1 x frequencies]` |
 | `nSCE` | Channel-wise normalized SCE, shape `[subjects x channels x frequencies]` |
 | `meanSCE` | Mean SCE across channels, shape `[subjects x 1 x frequencies]` |
 | `patternValues` | Unique coalition patterns for each subject/frequency/channel |
@@ -206,7 +212,6 @@ title('Group-average SCE spectrum');
 - Input preprocessing must be done before running this pipeline.
 - The current implementation stores coalition patterns using `uint64`, so very high channel counts may require modification.
 - If your data structure differs from `EEG.data`, set `DataVariable` and `DataField` accordingly.
-- The exact interpretation of the phase-dispersion summary may depend on your analysis design; adapt downstream statistical analysis as needed.
 
 ---
 
