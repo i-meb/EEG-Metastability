@@ -207,7 +207,7 @@ title('Group-average SCE spectrum');
 
 ---
 
-# Notes and limitations
+## Notes and limitations
 - This code assumes continuous EEG with shape `[channels x timepoints]`.
 - Input preprocessing must be done before running this pipeline.
 - The current implementation stores coalition patterns using `uint64`, so very high channel counts may require modification.
@@ -215,7 +215,7 @@ title('Group-average SCE spectrum');
 
 ---
 
-# Recommended repository structure
+## Recommended repository structure
 ```
 EEG-Metastability/
 ├── calcMSISCE.m
@@ -229,7 +229,7 @@ EEG-Metastability/
 ```
 ---
 
-# Citation
+## Citation
 If you use this code in academic work, please cite:
 1. This repository (https://github.com/i-meb/EEG-Metastability)
 2. Shanahan M. Metastable chimera states in community-structured oscillator networks. Chaos. 2010;20(1):013108.
@@ -239,7 +239,7 @@ Please cite this repository using the metadata provided in [`CITATION.cff`](./CI
 
 ---
 
-# License
+## License
 This project is released under the **BSD 3-Clause License**.
 This is a permissive open-source license that allows redistribution and use in both source and binary forms, with or without modification.
 
