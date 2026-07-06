@@ -1,4 +1,4 @@
-function results = calcMSISCE(inputDir, varargin)
+function results = calcMSISCE(inputPath, varargin)
 % calcMSISCE
 %
 % Calculate Metastability Index (MSI) and channel-wise
@@ -21,7 +21,7 @@ function results = calcMSISCE(inputDir, varargin)
 %   - izmy_gbweeg  (included in this repository)
 %
 % INPUT
-%   inputDir : directory containing EEG .mat files
+%   inputPath : directory containing EEG .mat files, or a single EEG .mat file
 %
 % PARAMETERS
 %   'FilePattern'        : filename pattern (default: 'sub_*.mat')
@@ -73,7 +73,7 @@ function results = calcMSISCE(inputDir, varargin)
 ip = inputParser;
 ip.FunctionName = mfilename;
 
-addRequired(ip, 'inputDir', @(x) ischar(x) || isstring(x));
+addRequired(ip, 'inputPath', @(x) ischar(x) || isstring(x));
 
 addParameter(ip, 'FilePattern', 'sub_*.mat', @(x) ischar(x) || isstring(x));
 addParameter(ip, 'OutputDir', '', @(x) ischar(x) || isstring(x));
@@ -95,10 +95,10 @@ addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'UseParallel', true, @(x) islogical(x) || isnumeric(x));
 addParameter(ip, 'Verbose', true, @(x) islogical(x) || isnumeric(x));
 
-parse(ip, inputDir, varargin{:});
+parse(ip, inputPath, varargin{:});
 opt = ip.Results;
 
-inputDir = char(inputDir);
+inputPath = char(inputPath);
 filePattern = char(opt.FilePattern);
 outputDir = char(opt.OutputDir);
 dataVariable = char(opt.DataVariable);
@@ -108,11 +108,19 @@ outputFileName = char(opt.OutputFileName);
 % -------------------------------------------------------------------------
 % Basic checks
 % -------------------------------------------------------------------------
-if ~isfolder(inputDir)
-    error('Input directory does not exist: %s', inputDir);
+if isfolder(inputPath)
+    inputDir = inputPath;
+    files = dir(fullfile(inputDir, filePattern));
+
+elseif isfile(inputPath)
+    [inputDir, fileName, fileExt] = fileparts(inputPath);
+    files = dir(fullfile(inputDir, [fileName, fileExt]));
+
+else
+    error(['Input path does not exist. Please provide either a directory ', ...
+           'containing EEG .mat files or a single EEG .mat file:\n%s'], inputPath);
 end
 
-files = dir(fullfile(inputDir, filePattern));
 if isempty(files)
     error('No files matching pattern "%s" were found in: %s', filePattern, inputDir);
 end
@@ -217,6 +225,7 @@ results.patternValues = patternValues;
 results.patternCounts = patternCounts;
 
 results.metadata = struct();
+results.metadata.inputPath = inputPath;
 results.metadata.inputDir = inputDir;
 results.metadata.filePattern = filePattern;
 results.metadata.outputDir = outputDir;
