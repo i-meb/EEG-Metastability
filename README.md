@@ -87,6 +87,8 @@ If you dataset uses different names or formats, you can change them via function
 
 # Quick start
 ```matlab
+eeglab; % if you need
+
 % Process all .mat files in a directory
 results = calcMSISCE('./examples', ...
     'OutputDir', './results', ...
