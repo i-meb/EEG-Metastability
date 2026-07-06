@@ -55,8 +55,10 @@ This repository does **not** bundle all third-party dependencies. You need:
 ---
 
 ## Input data format
-
-Each input file must be a `.mat` file containing an EEG structure:
+The first input can be either:
+- a directory containing `.mat` files
+- a single `.mat` file
+Each input file must contain an EEG structure:
 
 ```matlab
 EEG.data
@@ -85,7 +87,13 @@ If you dataset uses different names or formats, you can change them via function
 
 # Quick start
 ```matlab
-results = calcMSISCE('./data', ...
+% Process all .mat files in a directory
+results = calcMSISCE('./examples', ...
+    'OutputDir', './results', ...
+    'SaveResults', true);
+
+% Process a single .mat file
+results = calcMSISCE('./examples/sub_001.mat', ...
     'OutputDir', './results', ...
     'SaveResults', true);
 ```
@@ -95,7 +103,7 @@ results = calcMSISCE('./data', ...
 A small toy dataset is provided for demonstration purposes.
 
 ### Files
-- `example_data/sub_001.mat`
+- `examples/sub_001.mat`
 - `examples/make_example_eeg.m`
 - `examples/run_example.m`
 
@@ -110,7 +118,14 @@ with shape:
 
 # Main function
 ```matlab
-results = calcMSISCE(inputDir, Name, Value, ...)
+results = calcMSISCE(inputPath, Name, Value, ...)
+```
+`inputPath` can be either a folder or a single `.mat` file.
+
+Examples:
+```matlab
+calcMSISCE('./examples')
+calcMSISCE('./examples/sub_001.mat')
 ```
 
 ## Important parameters
