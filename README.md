@@ -42,15 +42,12 @@ This pipeline performs the following steps for each subject and frequency bin:
 ### MATLAB
 Tested in MATLAB with standard numeric and parallel computing functionality.
 
-### Required external dependencies
-This repository does **not** bundle all third-party dependencies. You need:
-
-- **EEGLAB**  
-  Required for `eegfilt`
+### EEGLAB
+This repository does **not** bundle all third-party dependencie and you need **EEGLAB** Required for `eegfilt`.
 
 ### Included in this repository
-- `calcMSISCE.m`
-- `izmy_gbweeg.m`
+- `calcMSISCE.m`: Main code
+- `izmy_gbweeg.m`: Gabor Wavelet
 
 ---
 
@@ -78,53 +75,56 @@ If needed, current source density (CSD) should be applied externally during prep
 - Data are already preprocessed
 - Noise/artifact rejection has already been completed
 - Data are continuous, not epoched
-- Default number of channel is 63
-- Default sampling rate is 1000 Hz
 
 If you dataset uses different names or formats, you can change them via function arguments.
 
 ---
 
 # Quick start
+Clone this repository using Git:
+
 ```matlab
-eeglab; % if you need
+!git clone https://github.com/i-meb/EEG-Metastability.git
+```
 
-% Process all .mat files in a directory
-results = calcMSISCE('./examples', ...
-    'OutputDir', './results', ...
-    'SaveResults', true);
+The `!git` command requires Git to be installed and accessible from the system path. If Git is not installed, download it from https://git-scm.com/install.
 
-% Process a single .mat file
+Move into the repository, and either run `examples/run_example.m`, or run the following: 
+
+```matlab
 results = calcMSISCE('./examples/sub_001.mat', ...
     'OutputDir', './results', ...
     'SaveResults', true);
 ```
 
-### Example dataset
+### Example dataset files
 
 A small toy dataset is provided for demonstration purposes.
-
-### Files
 - `examples/sub_001.mat`
 - `examples/make_example_eeg.m`
-- `examples/run_example.m`
 
 The example dataset contains a MATLAB structure:
+
 ```matlab
 EEG.data
 ```
+
 with shape:
+
 ```matlab
 [channels x timepoints]
 ```
 
 # Main function
+
 ```matlab
 results = calcMSISCE(inputPath, Name, Value, ...)
 ```
+
 `inputPath` can be either a folder or a single `.mat` file.
 
 Examples:
+
 ```matlab
 calcMSISCE('./examples')
 calcMSISCE('./examples/sub_001.mat')
@@ -270,7 +270,7 @@ This is a permissive open-source license that allows redistribution and use in b
 
 ## Contact
 Maintainer: Mebuki Izumiya mebuki@nips.ac.jp
-
+            
             Division of Neural Dynamics
             National Institute for Physiological Sciences, National Institutes of Natural Sciences
             38 Nishigonaka, Myodaiji, Okazaki, Aichi 444-8585, JAPAN
