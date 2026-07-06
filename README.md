@@ -89,6 +89,12 @@ Clone this repository using Git:
 
 The `!git` command requires Git to be installed and accessible from the system path. If Git is not installed, download it from https://git-scm.com/install.
 
+If `eeglab` is not installed, download it https://sccn.ucsd.edu/eeglab/download.php.
+
+```matlab
+eeglab;
+```
+
 Move into the repository, and either run `examples/run_example.m`, or run the following: 
 
 ```matlab
