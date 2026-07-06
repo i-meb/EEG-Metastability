@@ -387,7 +387,7 @@ for f = 1:nFreq
     meanSCE_subj(f) = mean(scePerChannel, 'omitnan');
 
     if opt.Verbose
-        fprintf('[%s] freq=%g Hz done\n', fileName, cf);
+        fprintf('[%s] %g Hz done\n', fileName, cf);
     end
 end
 
