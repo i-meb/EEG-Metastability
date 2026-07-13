@@ -1,3 +1,5 @@
+%% 
+
 function h = izmy_gbweeg(data, freq, sample_rate, nco)
 
 [channel, nTime] = size(data);
