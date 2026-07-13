@@ -267,10 +267,8 @@ This project is released under the **BSD 3-Clause License**.
 This is a permissive open-source license that allows redistribution and use in both source and binary forms, with or without modification.
 
 - The original copyright notice and license must be retained  
-- Proper attribution to the original author must be maintained  
 - The names of the authors or affiliated institutions must not be used to endorse or promote derived products without prior permission  
 - The authors are not liable for any damages arising from the use of this software.
-- If you use this code in academic work, please consider citing the repository and relevant publications.
 
 ---
 
