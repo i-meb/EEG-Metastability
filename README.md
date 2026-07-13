@@ -247,8 +247,7 @@ EEG-Metastability/
 ├── examples/
     └── run_example.m
     └── make_example_eeg.m    % make dummy eeg data
-└── data/
-    └── sub_001.mat           % user-provided, not included in repo
+    └── sub_001.mat         
 ```
 ---
 
