@@ -371,13 +371,12 @@ for f = 1:nFreq
         patCounts = accumarray(idxPat, 1);
 
         P = patCounts ./ size(coalition, 2);
-        % P = patCounts ./ numel(opt.TimeIndices);  % 削除してよい
         sceBits = -sum(P .* log2(P), 'omitnan');
 
         % number of possible coalition states = 2^(nPartners)
         % therefore max entropy in bits = nPartners
         maxEntropy = nPartners;
-        scePerChannel(ch) = sceBits / nCh;
+        scePerChannel(ch) = sceBits / (nCh-1);    %%%
 
         patternValues_subj{f, ch} = patVals;
         patternCounts_subj{f, ch} = patCounts;
