@@ -13,6 +13,10 @@
 % SPDX-License-Identifier: BSD-3-Clause
 % Copyright (c) 2026 Mebuki Izumiya
 
+if exist('eegfilt', 'file') ~= 2
+    error(['EEGLAB function eegfilt.m was not found. ' ...
+           'Start EEGLAB or add EEGLAB to the MATLAB path before running this example.']);
+end
 
 scriptDir = fileparts(mfilename('fullpath'));
 repoRoot = fileparts(scriptDir);
