@@ -168,7 +168,7 @@ calcMSISCE('./examples/sub_001.mat')
 | `SampleRate` | Sampling rate in Hz | `1000` |
 | `Channels` | Number of channels to use | `63` |
 | `TimeIndices` | Time samples to analyze | `[]` (all samples) |
-| `FrequencyRange` | Center frequencies to analyze | `1:47` |
+| `FrequencyRange` | Frequencies range to analyze | `1:47` |
 | `BandWidth` | Band-pass width in Hz | `1` |
 | `Threshold` | Phase-difference threshold (radians) | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
