@@ -8,8 +8,6 @@
 %   5. Runs calcMSISCE using a small frequency range.
 %   6. Displays the resulting MSI and mean SCE.
 %
-% The example dataset is synthetic and contains no human participant data.
-%
 % SPDX-License-Identifier: BSD-3-Clause
 % Copyright (c) 2026 Mebuki Izumiya
 
