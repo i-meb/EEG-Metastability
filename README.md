@@ -111,7 +111,7 @@ with shape:
 ```
 
 The input data should be continuous EEG.
-If needed, current source density (CSD) should be applied externally during preprocessing. CSD is not included in this repository.
+If needed, current source density (CSD) transformation should be applied externally during preprocessing. CSD is not included in this repository.
 
 ## Default assumptions
 
@@ -204,7 +204,7 @@ The function returns a struct named `results` with the following fields.
 ### 1. Filtering
 For each frequency bin, the signal is band-pass filtered using `eegfilt`.
 
-### 2. Wavelet transformation
+### 2. Wavelet transform
 `izmy_gbweeg.m` computes complex wavelet coefficients for each channel.
 
 ### 3. Phase extraction
