@@ -39,7 +39,7 @@ function results = calcMSISCE(inputPath, varargin)
 %                       Default: 1.2
 %   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
 %                       Default: 1
-%   'UseParallel'       Enable PARFOR. Default: true
+%   'UseParallel'       Enable PARFOR. Default: false
 %   'Verbose'           Display progress messages. Default: true
 %
 %   ------
