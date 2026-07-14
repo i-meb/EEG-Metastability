@@ -283,12 +283,8 @@ Please cite this repository using the metadata provided in [`CITATION.cff`](./CI
 ---
 
 ## License
-This project is released under the **BSD 3-Clause License**.
-This is a permissive open-source license that allows redistribution and use in both source and binary forms, with or without modification.
-
-- The original copyright notice and license must be retained  
-- The names of the authors or affiliated institutions must not be used to endorse or promote derived products without prior permission  
-- The authors are not liable for any damages arising from the use of this software.
+This project is licensed under the BSD 3-Clause License.
+See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
