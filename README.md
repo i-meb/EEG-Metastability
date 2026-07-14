@@ -170,7 +170,7 @@ calcMSISCE('./examples/sub_001.mat')
 | `TimeIndices` | Time samples to analyze | `[]` (all samples) |
 | `FrequencyRange` | Frequencies range to analyze | `1:47` |
 | `BandWidth` | Band-pass width in Hz | `1` |
-| `Threshold` | Phase-difference threshold (radians) | `1.2` |
+| `Threshold` | Phase-difference threshold (radians). Positive scalar in radians. A channel pair is classified as synchronized when the absolute wrapped phase difference is strictly smaller than this value. | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
 | `UseParallel` | Use `parfor` if available | `true` |
 | `Verbose` | Print progress messages | `true` |
@@ -202,10 +202,10 @@ The function returns a struct named `results` with the following fields.
 ## Method summary
 
 ### 1. Filtering
-For each frequency bin, the signal is band-pass filtered using `eegfilt`.
+For each target frequency `cf`, band-pass filtered the signal between `cf` and `cf + BandWidth` using `eegfilt`.
 
 ### 2. Wavelet transform
-`izmy_gbweeg.m` computes complex wavelet coefficients for each channel.
+Computes complex wavelet coefficients for each channel using `izmy_gbweeg.m`.
 
 ### 3. Phase extraction
 Instantaneous phase is extracted from the complex-valued wavelet output.
