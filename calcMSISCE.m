@@ -1,71 +1,122 @@
 function results = calcMSISCE(inputPath, varargin)
-% calcMSISCE
+% calcMSISCE  Compute EEG Metastability Index and Synchrony Coalition Entropy.
 %
-% Calculate Metastability Index (MSI) and channel-wise
-% Synchrony Coalition Entropy (SCE) from EEG data.
+%   RESULTS = calcMSISCE(INPUTPATH) calculates frequency-resolved
+%   Metastability Index (MSI) and channel-wise Synchrony Coalition Entropy
+%   (SCE) from preprocessed continuous EEG data.
 %
-% In this implementation, MSI is defined as the temporal variance
-% of network-wide phase synchrony across channels at each frequency.
+%   -----
+%   INPUT
 %
-% SCE is computed for each channel by thresholding phase differences
-% between the reference channel and all other channels, constructing
-% binary synchrony coalition patterns across time, and evaluating the
-% Shannon entropy of the pattern distribution.
+%       Path to either:
+%       (1) a directory containing MATLAB EEG files, or
+%       (2) a single MATLAB EEG file.
 %
-% This function is intended for open-source use and avoids hard-coded paths.
-% It processes MATLAB .mat files containing an EEG structure with data in
-% EEG.data (channels x timepoints).
+%       By default, each file must contain:
 %
-% REQUIRED EXTERNAL FUNCTIONS / TOOLBOXES
-%   - eegfilt      (EEGLAB)
-%   - izmy_gbweeg  (included in this repository)
+%           EEG.data
 %
-% INPUT
-%   inputPath : directory containing EEG .mat files, or a single EEG .mat file
+%       with dimensions:
 %
-% PARAMETERS
-%   'FilePattern'        : filename pattern (default: 'sub_*.mat')
-%   'OutputDir'          : directory to save output (default: '')
-%   'SaveResults'        : true/false (default: false)
-%   'OutputFileName'     : .mat filename if saving (default: 'msi_sce_results.mat')
-%   'DataVariable'       : top-level variable name in .mat (default: 'EEG')
-%   'DataField'          : field inside structure containing signal (default: 'data')
-%   'SampleRate'         : sampling rate in Hz (default: 1000)
-%   'Channels'           : number of channels to use (default: 63)
-%   'TimeIndices'        : indices to analyze (default: [])
-%   'FrequencyRange'     : vector of center frequencies (default: 1:47)
-%   'BandWidth'          : band-pass width in Hz for eegfilt (default: 1)
-%   'Threshold'          : phase-difference threshold in radians (default: 1.2)
-%   'WaveletCycles'      : nco parameter for izmy_gbweeg (default: 1)
-%   'UseParallel'        : true/false (default: true)
-%   'Verbose'            : true/false (default: true)
+%           [channels x time samples]
 %
-% OUTPUT
-%   results : struct with fields
-%       .subjectIds            [nSubjects x 1]
-%       .fileNames             {nSubjects x 1}
-%       .frequencies           [1 x nFreq]
-%       .threshold             scalar
-%       .sampleRate            scalar
-%       .channels              scalar
-%       .timeIndices           vector
-%       .MSI                   [nSubjects x 1 x nFreq]
-%       .nSCE                  [nSubjects x nChannels x nFreq]
-%       .meanSCE               [nSubjects x 1 x nFreq]
-%       .patternValues         {nSubjects, nFreq, nChannels}
-%       .patternCounts         {nSubjects, nFreq, nChannels}
-%       .metadata              struct
+%   ---------------------
+%   NAME-VALUE PARAMETERS
 %
-% NOTE
-%   - This function assumes each input file contains one continuous recording
-%     in EEG.data with shape [channels x timepoints].
-%   - CSD preprocessing is NOT included in this function.
-%     If required, it must be applied externally.
+%   'FilePattern'       Filename pattern. Default: 'sub_*.mat'
+%   'OutputDir'         Directory for saved results. Default: ''
+%   'SaveResults'       Save output to disk. Default: false
+%   'OutputFileName'    Output MAT filename.
+%                       Default: 'msi_sce_results.mat'
+%   'DataVariable'      Top-level MAT variable. Default: 'EEG'
+%   'DataField'         Signal field in DataVariable. Default: 'data'
+%   'SampleRate'        Sampling frequency in Hz. Default: 1000
+%   'Channels'          Number of channels analyzed. Default: 63
+%   'TimeIndices'       Time-sample indices. Default: [] (all samples)
+%   'FrequencyRange'    Wavelet center frequencies in Hz. Default: 1:47
+%   'BandWidth'         Pre-wavelet filter bandwidth in Hz. Default: 1
+%   'Threshold'         Absolute phase-difference threshold in radians.
+%                       Default: 1.2
+%   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
+%                       Default: 1
+%   'UseParallel'       Enable PARFOR. Default: true
+%   'Verbose'           Display progress messages. Default: true
 %
-% EXAMPLE
-%   results = calcMSISCE('./data', ...
-%       'OutputDir', './results', ...
-%       'SaveResults', true);
+%   ------
+%   OUTPUT
+%
+%   results >
+%       Structure containing:
+%
+%       .MSI
+%           Metastability Index, defined as the temporal variance of the
+%           Kuramoto order parameter. Dimensions:
+%           [subjects x 1 x frequencies]
+%
+%       .nSCE
+%           Normalized channel-wise Synchrony Coalition Entropy.
+%           Dimensions:
+%           [subjects x channels x frequencies]
+%
+%       .meanSCE
+%           Mean normalized SCE across channels.
+%           Dimensions:
+%           [subjects x 1 x frequencies]
+%
+%       .patternValues
+%           Observed synchrony-coalition pattern identifiers.
+%
+%       .patternCounts
+%           Occurrence counts of the observed patterns.
+%
+%   --------------
+%   SCE DEFINITION
+%
+%   For each reference channel, binary synchronization states are computed
+%   against all other channels:
+%
+%       synchronized = abs(phase difference) < Threshold
+%
+%   The self-channel is excluded. For M total channels, each coalition
+%   therefore consists of M-1 binary elements and has 2^(M-1) possible
+%   states. The normalized channel-wise SCE is:
+%
+%       SCE_i = -sum_s p_i(s) log2(p_i(s)) / (M - 1)
+%
+%   Mean SCE is the arithmetic mean of SCE_i across the M channels.
+%
+%   ------------
+%   DEPENDENCIES
+%
+%   eegfilt          EEGLAB
+%   izmy_gbweeg      Included in this repository
+%
+%   -----
+%   NOTES
+%
+%   - Input data must already be preprocessed and artifact-cleaned.
+%   - CSD transformation is not performed by this function.
+%   - Coalition patterns are encoded using uint64; therefore the current
+%     implementation supports at most 64 partner channels.
+%
+%   ---------------------
+%   AUTHORS AND COPYRIGHT
+%
+%   Copyright (c) 2026 Mebuki Izumiya
+%
+%   Maintainer:
+%       Mebuki Izumiya
+%       Division of Neural Dynamics
+%       National Institute for Physiological Sciences
+%
+%   -------
+%   LICENSE
+%
+%   SPDX-License-Identifier: BSD-3-Clause
+%   - This file is part of EEG-Metastability and is distributed under the
+%     BSD 3-Clause License. See the LICENSE file in the repository root.
+%
+%   See also izmy_gbweeg, eegfilt.
 
 % -------------------------------------------------------------------------
 % Parse inputs
@@ -375,8 +426,7 @@ for f = 1:nFreq
 
         % number of possible coalition states = 2^(nPartners)
         % therefore max entropy in bits = nPartners
-        maxEntropy = nPartners;
-        scePerChannel(ch) = sceBits / (nCh-1);    %%%
+        scePerChannel(ch) = sceBits / nPartners;   
 
         patternValues_subj{f, ch} = patVals;
         patternCounts_subj{f, ch} = patCounts;
