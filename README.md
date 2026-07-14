@@ -36,18 +36,64 @@ This pipeline performs the following steps for each subject and frequency bin:
 - Parallel processing support (`parfor`)
 
 ---
+## Getting Started
 
-## Requirements
+### Prerequisitesc
 
-### MATLAB
-Tested in MATLAB with standard numeric and parallel computing functionality.
+Before running the toolbox, install the following:
 
-### EEGLAB
-This repository does **not** bundle all third-party dependencie and you need **EEGLAB** Required for `eegfilt`.
+- MATLAB R2022b or later (recommended)
+- EEGLAB
 
-### Included in this repository
-- `calcMSISCE.m`: Main code
-- `izmy_gbweeg.m`: Gabor Wavelet
+Add all required toolboxes to the MATLAB path.
+
+---
+
+### Option 1. Clone the repository using Git
+
+Clone the repository:
+
+```bash
+git clone https://github.com/i-meb/EEG-Metastability.git
+cd EEG-Metastability
+```
+
+Open MATLAB and change the current folder to the repository root.
+
+```matlab
+cd('path/to/EEG-Metastability')
+```
+
+Run the example:
+
+```matlab
+run('examples/run_example.m')
+```
+
+This example analyzes the included sample dataset (`examples/sub_001.mat`) and saves the output in the `output/` directory.
+
+---
+
+### Option 2. Download the repository locally (ZIP)
+
+If you do not use Git:
+
+1. Download this repository as a ZIP file.
+2. Extract the ZIP archive.
+3. Open MATLAB.
+4. Change the current folder to the extracted repository.
+
+```matlab
+cd('path/to/EEG-Metastability')
+```
+
+Run the example:
+
+```matlab
+run('examples/run_example.m')
+```
+
+The example will analyze `data/sub_001.mat` and save the results in `output/`.
 
 ---
 
@@ -80,34 +126,11 @@ If you dataset uses different names or formats, you can change them via function
 
 ---
 
-# Quick start
-Clone this repository using Git:
-
-```matlab
-!git clone https://github.com/i-meb/EEG-Metastability.git
-```
-
-The `!git` command requires Git to be installed and accessible from the system path. If Git is not installed, download it from https://git-scm.com/install.
-
-If `eeglab` is not installed, download it https://sccn.ucsd.edu/eeglab/download.php.
-
-```matlab
-eeglab;
-```
-
-Move into the repository, and either run `examples/run_example.m`, or run the following: 
-
-```matlab
-results = calcMSISCE('./examples/sub_001.mat', ...
-    'OutputDir', './results', ...
-    'SaveResults', true);
-```
-
 ### Example dataset files
 
 A small toy dataset is provided for demonstration purposes.
-- `examples/sub_001.mat`
-- `examples/make_example_eeg.m`
+- `examples/sub_001.mat`: 30 seconds of actual data for one subject (https://doi.org/10.17605/OSF.IO/29QB5)
+- `examples/make_example_eeg.m`: you can make a dummy EEG data using this
 
 The example dataset contains a MATLAB structure:
 
@@ -121,22 +144,20 @@ with shape:
 [channels x timepoints]
 ```
 
-# Main function
+## Main function
 
 ```matlab
 results = calcMSISCE(inputPath, Name, Value, ...)
 ```
 
-`inputPath` can be either a folder or a single `.mat` file.
-
-Examples:
+`inputPath` can be either a folder or a single `.mat` file. 
 
 ```matlab
 calcMSISCE('./examples')
 calcMSISCE('./examples/sub_001.mat')
 ```
 
-## Important parameters
+### Important parameters
 
 | Parameter | Description | Default |
 |---|---|---:|
@@ -158,7 +179,7 @@ calcMSISCE('./examples/sub_001.mat')
 
 ---
 
-## Output
+### Output
 
 The function returns a struct named `results` with the following fields.
 
@@ -238,7 +259,7 @@ title('Group-average SCE spectrum');
 
 ---
 
-## Recommended repository structure
+## Repository structure
 ```
 EEG-Metastability/
 ├── calcMSISCE.m
@@ -272,7 +293,7 @@ This is a permissive open-source license that allows redistribution and use in b
 ---
 
 ## Contact
-Maintainer: Mebuki Izumiya mebuki@nips.ac.jp
+Maintainer: Mebuki Izumiya mebuki@nips.ac.jp, Keiichi Kitajo kkitajo@nips.ac.jp
             
             Division of Neural Dynamics
             National Institute for Physiological Sciences, National Institutes of Natural Sciences
