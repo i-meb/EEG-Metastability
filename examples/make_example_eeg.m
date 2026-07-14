@@ -8,14 +8,14 @@
 %   EEG.data
 %       Synthetic continuous EEG signals with dimensions:
 %
-%           [channels x time samples] = [63 x 10000]
+%           [channels x time samples]
 %
 %   The dataset has the following properties:
 %
 %       Number of channels:       63
 %       Sampling frequency:       1000 Hz
-%       Number of time samples:   10000
-%       Signal duration:          10 seconds
+%       Number of time samples:   30000
+%       Signal duration:          30 seconds
 %
 % SIGNAL MODEL
 %   Each channel is generated independently as:
@@ -60,7 +60,7 @@
 %
 %   The resulting file can then be analyzed using:
 %
-%       results = calcMSISCE('example_data/sub_001.mat', ...
+%       results = calcMSISCE('examples/dummy_001.mat', ...
 %           'SampleRate', 1000, ...
 %           'Channels', 63);
 %
@@ -74,11 +74,12 @@
 %   - The dataset should therefore be used only to confirm that the
 %     analysis pipeline executes correctly.
 %
-% COPYRIGHT
-%   Copyright (c) 2026 Mebuki Izumiya
+% Copyright (c) 2026 Mebuki Izumiya
+% LICENSE: BSD-3-Clause
 %
-% LICENSE
-%   SPDX-License-Identifier: BSD-3-Clause
+
+scriptDir = fileparts(mfilename('fullpath'));
+outputFile = fullfile(scriptDir, 'dummy_001.mat');
 
 rng(1);
 
@@ -99,5 +100,5 @@ for ch = 1:nCh
         0.3 * randn(1, nT);
 end
 
-save(fullfile('examples', 'dummy_001.mat'), 'EEG');
-disp('Example dataset saved to examples/dummy_001.mat .');
+save(outputFile, 'EEG');
+fprintf('Synthetic example dataset saved to:\n%s\n', outputFile);
