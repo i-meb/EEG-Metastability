@@ -169,8 +169,8 @@ calcMSISCE('./examples/sub_001.mat')
 | `SampleRate` | Sampling rate in Hz | `1000` |
 | `Channels` | Number of channels to use | `63` |
 | `TimeIndices` | Time samples to analyze | `[]` (all samples) |
-| `FrequencyRange` | Frequencies range to analyze | `1:47` |
-| `BandWidth` | Band-pass width in Hz | `1` |
+| `FrequencyRange` | Target frequencies in Hz. Each frequency cf is used both as the lower cutoff of the pre-wavelet band-pass filter and as the frequency of the complex Gabor wavelet. | `1:47` |
+| `BandWidth` | Width of the pre-wavelet band-pass filter in Hz. For each target frequency cf, the filter passband is [cf, cf + BandWidth] Hz. | `1` |
 | `Threshold` | Phase-difference threshold (radians). Positive scalar in radians. A channel pair is classified as synchronized when the absolute wrapped phase difference is strictly smaller than this value. | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
 | `UseParallel` | Use `parfor` if available | `false` |
