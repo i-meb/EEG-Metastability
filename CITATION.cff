@@ -7,6 +7,9 @@ authors:
   - family-names: Izumiya
     given-names: Mebuki
     email: mebuki@nips.ac.jp
+  - family-names: Kitajo
+    given-names: Keiichi
+    email: kkitajo@nips.ac.jp
 
 repository-code: "https://github.com/i-meb/EEG-Metastability"
 
@@ -26,18 +29,4 @@ keywords:
 license: BSD-3-Clause
 
 version: 1.0.0
-date-released: 2026-03-11
-
-
-  
-Publish後、追加
-----------
-preferred-citation:
-  type: article
-  authors:
-    - family-names: Izumiya
-      given-names: Mebuki
-  title: "Metastability in EEG phase synchronization networks correlates with autistic traits"
-  journal: "..."
-  year: 2026
-----------
+date-released: 2026-07-14
