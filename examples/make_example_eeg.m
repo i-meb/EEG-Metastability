@@ -17,5 +17,5 @@ for ch = 1:nCh
         0.3 * randn(1, nT);
 end
 
-save(fullfile('example_data', 'sub_001.mat'), 'EEG');
-disp('Example dataset saved to example_data/sub_001.mat');
+save(fullfile('examples', 'dummy_001.mat'), 'EEG');
+disp('Example dataset saved to examples/dummy_001.mat .');
