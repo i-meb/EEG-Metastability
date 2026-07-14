@@ -18,22 +18,20 @@ This repository is intended for researchers who want to quantify frequency-speci
 This pipeline performs the following steps for each subject and frequency bin:
 
 1. Load preprocessed EEG data from `.mat` files
-2. Compute complex wavelet coefficients using `izmy_gbweeg.m`
-3. Extract instantaneous phase
-4. Compute **network-wide Metastability index (MSI)**
-5. Build binary synchrony coalitions using a phase-difference threshold
-6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
-7. Save per-subject and per-frequency results
+2. Instantaneous phase was extracted (complex Gabor wavelet coefficients were used in this repository).
+3. Compute **network-wide Metastability index (MSI)**
+4. Build binary synchrony coalitions using a phase-difference threshold
+5. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
+6. Save per-subject and per-frequency results
 
 ---
 
 ## Features
 
-- Frequency-resolved analysis
 - Network-wide MSI output
 - Channel-wise SCE output
 - Batch processing of multiple subjects
-- Parallel processing support (`parfor`)
+- Parallel processing support (`parfor`) 
 
 ---
 ## Getting Started
@@ -213,8 +211,7 @@ For each frequency bin, the signal is band-pass filtered using `eegfilt`.
 Instantaneous phase is extracted from the complex-valued wavelet output.
 
 ### 4. MSI calculation
-At each time point, a network-wide phase synchrony value is computed across channels.  
-MSI is defined as the temporal variability (variance) of this synchrony over time.
+MSI was calculated as the temporal variance of global phase synchrony, quantified by the Kuramoto order parameter.
 
 ### 5. SCE calculation 
 For SCE calculation, synchrony coalition was made which is all pairwise phase differences are thresholded for each channel and time point:
@@ -223,7 +220,7 @@ For SCE calculation, synchrony coalition was made which is all pairwise phase di
 - unsynchronized = `0` otherwise
 
 For each channel, the time series of binary coalition states is converted into discrete patterns.  
-The probability distribution of these coalition states is used to compute Shannon entropy in bits, then normalized.
+This entropy was computed from the coalition-state probability distribution and normalized by the number of non-reference channel partners.
 
 ---
 
