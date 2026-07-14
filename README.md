@@ -9,7 +9,7 @@ MATLAB code for calculating EEG metastability-related measures, including channe
 
 This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
 <div align="left">
-  <img src="./doc/pipeline.jpg" alt="Logo" width="400">
+  <img src="./doc/pipeline.png" alt="Logo" width="400">
 </div>
 
 
