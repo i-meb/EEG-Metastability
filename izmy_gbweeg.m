@@ -15,17 +15,17 @@ function h = izmy_gbweeg(data, freq, sample_rate, nco)
 %   freq
 %       Wavelet center frequency in Hz. Positive scalar.
 %
-%   sampleRate
-%       Sampling frequency in Hz. Positive scalar.
+%   sample_rate
+%       Sampling frequency of data in Hz. Positive scalar.
 %
-%   nCycles
-%       Wavelet-duration parameter. The Gaussian standard deviation is:
+%   nco
+%       Number of oscillatory cycles spanned by the full wavelet window from approximately -3σ to +3σ. The Gaussian standard deviation is
 %
-%           sigma = nCycles / (6 * freq)
+%           sigma = nco / (6 * freq)
 %
-%       and the half-window duration is:
+%       and the full window duration is approximately
 %
-%           nCycles / (2 * freq)
+%           nco / freq seconds.
 %
 %   OUTPUT
 %   ------
@@ -97,7 +97,7 @@ if validLength <= 0
            'Increase data length or reduce WaveletCycles.']);
 end
 
-h = zeros(channel, validLength);
+h = complex(zeros(channel, validLength));
 
 for ch = 1:channel
     temp = conv(data(ch, :), mother, 'valid');
