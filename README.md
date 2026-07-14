@@ -18,11 +18,12 @@ This repository is intended for researchers who want to quantify frequency-speci
 This pipeline performs the following steps for each subject and frequency bin:
 
 1. Load preprocessed EEG data from `.mat` files
-2. Instantaneous phase was extracted (complex Gabor wavelet coefficients were used in this repository).
-3. Compute **network-wide Metastability index (MSI)**
-4. Build binary synchrony coalitions using a phase-difference threshold
-5. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
-6. Save per-subject and per-frequency results
+2. Apply narrow-band filtering from \(cf\) to \(cf+\mathrm{BandWidth}\) Hz.
+3. Instantaneous phase was extracted (complex Gabor wavelet coefficients were used in this repository).
+4. Compute **network-wide Metastability index (MSI)**
+5. Build binary synchrony coalitions using a phase-difference threshold
+6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
+7. Save per-subject and per-frequency results
 
 ---
 
@@ -36,7 +37,7 @@ This pipeline performs the following steps for each subject and frequency bin:
 ---
 ## Getting Started
 
-### Prerequisitesc
+### Prerequisites
 
 Before running the toolbox, install the following:
 
@@ -91,7 +92,7 @@ Run the example:
 run('examples/run_example.m')
 ```
 
-The example will analyze `data/sub_001.mat` and save the results in `output/`.
+The example will analyze `examples/sub_001.mat` and save the results in `output/`.
 
 ---
 
@@ -120,7 +121,7 @@ If needed, current source density (CSD) transformation should be applied externa
 - Noise/artifact rejection has already been completed
 - Data are continuous, not epoched
 
-If you dataset uses different names or formats, you can change them via function arguments.
+If your dataset uses different names or formats, you can change them via function arguments.
 
 ---
 
@@ -172,7 +173,7 @@ calcMSISCE('./examples/sub_001.mat')
 | `BandWidth` | Band-pass width in Hz | `1` |
 | `Threshold` | Phase-difference threshold (radians). Positive scalar in radians. A channel pair is classified as synchronized when the absolute wrapped phase difference is strictly smaller than this value. | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
-| `UseParallel` | Use `parfor` if available | `true` |
+| `UseParallel` | Use `parfor` if available | `false` |
 | `Verbose` | Print progress messages | `true` |
 
 ---
