@@ -1,56 +1,49 @@
 % run_example  Minimal executable example for EEG-Metastability.
 %
-% This script:
-%   1. Locates the repository root.
-%   2. Adds the repository functions to the MATLAB path.
-%   3. Calls calcMSISCE, which checks that EEGLAB/eegfilt is available.
-%   4. Loads examples/sub_001.mat.
-%   5. Runs calcMSISCE using a small frequency range.
-%   6. Displays the resulting MSI and mean SCE.
+% This script analyzes the included sample EEG file at selected
+% frequencies, saves the results, and plots MSI and mean SCE.
 %
-% SPDX-License-Identifier: BSD-3-Clause
+% License: BSD-3-Clause
 % Copyright (c) 2026 Mebuki Izumiya
 
+scriptDir = fileparts(mfilename('fullpath'));
+repoRoot  = fileparts(scriptDir);
+
+addpath(repoRoot);
+
 if exist('eegfilt', 'file') ~= 2
-    error(['EEGLAB function eegfilt.m was not found. ' ...
-           'Start EEGLAB or add EEGLAB to the MATLAB path before running this example.']);
+    error(['EEGLAB function eegfilt.m was not found. ', ...
+        'Start EEGLAB or add EEGLAB to the MATLAB path.']);
 end
 
-scriptDir = fileparts(mfilename('fullpath'));
-repoRoot = fileparts(scriptDir);
-addpath(repoRoot);
 exampleFile = fullfile(scriptDir, 'sub_001.mat');
+outputDir   = fullfile(repoRoot, 'output');
 
-% If you want to work with a single sample files:
 results = calcMSISCE(exampleFile, ...
-    'FilePattern', 'sub_*.mat', ...
     'SampleRate', 1000, ...
     'Channels', 63, ...
-    'FrequencyRange', 1:30, ...
+    'FrequencyRange', [10, 18], ...
+    'BandWidth', 1, ...
     'Threshold', 1.2, ...
+    'WaveletCycles', 1, ...
+    'UseParallel', false, ...
     'SaveResults', true, ...
+    'OutputDir', outputDir, ...
+    'OutputFileName', 'example_results.mat', ...
     'Verbose', true);
-
-% If you want to work with multiple files:
-results = calcMSISCE(scriptDir, ...
-    'FilePattern', 'sub_*.mat', ...
-    'SampleRate', 1000, ...
-    'Channels', 63, ...
-    'FrequencyRange', 1:30, ...
-    'Threshold', 1.2, ...
-    'SaveResults', true, ...
-    'Verbose', true);
-
-% Visualization
 
 figure;
-plot(results.frequencies, squeeze(results.MSI(1,1,:)), 'LineWidth', 2);
+plot(results.frequencies, squeeze(results.MSI(1,1,:)), ...
+    '-o', 'LineWidth', 2);
 xlabel('Frequency (Hz)');
 ylabel('MSI');
-title('Example MSI spectrum');
+title('Example MSI');
+grid on;
 
 figure;
-plot(results.frequencies, squeeze(results.meanSCE(1,1,:)), 'LineWidth', 2);
+plot(results.frequencies, squeeze(results.meanSCE(1,1,:)), ...
+    '-o', 'LineWidth', 2);
 xlabel('Frequency (Hz)');
 ylabel('Mean normalized SCE');
-title('Example SCE spectrum');
+title('Example mean SCE');
+grid on;
