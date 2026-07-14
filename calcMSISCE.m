@@ -143,7 +143,7 @@ addParameter(ip, 'BandWidth', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 
-addParameter(ip, 'UseParallel', true, @(x) islogical(x) || isnumeric(x));
+addParameter(ip, 'UseParallel', false, @(x) islogical(x) || isnumeric(x));
 addParameter(ip, 'Verbose', true, @(x) islogical(x) || isnumeric(x));
 
 parse(ip, inputPath, varargin{:});
