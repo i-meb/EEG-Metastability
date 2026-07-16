@@ -58,11 +58,7 @@ function h = izmy_gbweeg(data, freq, sample_rate, nco)
 %
 %   AUTHORS AND COPYRIGHT
 %   ---------------------
-%   Copyright (c) 2026 Keiichi Kitajo
-%
-%   Contact:
-%       Keiichi Kitajo
-%       Mebuki Izumiya
+%   Copyright (c) 2026 Keiichi Kitajo and Mebuki Izumiya
 %
 %   LICENSE
 %   -------
