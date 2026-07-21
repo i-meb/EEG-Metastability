@@ -88,8 +88,7 @@ function results = calcMSISCE(inputPath, varargin)
 %   ------------
 %   DEPENDENCIES
 %
-%   eegfilt          EEGLAB
-%   izmy_gbweeg      Included in this repository
+%   - izmy_gbweeg      Included in this repository
 %
 %   -----
 %   NOTES
@@ -116,7 +115,7 @@ function results = calcMSISCE(inputPath, varargin)
 %   - This file is part of EEG-Metastability and is distributed under the
 %     BSD 3-Clause License. See the LICENSE file in the repository root.
 %
-%   See also izmy_gbweeg, eegfilt.
+%   See also izmy_gbweeg.
 
 % -------------------------------------------------------------------------
 % Parse inputs
@@ -138,7 +137,7 @@ addParameter(ip, 'SampleRate', 1000, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'Channels', 63, @(x) isnumeric(x) && isscalar(x) && x >= 2);
 addParameter(ip, 'TimeIndices', [], @(x) isnumeric(x) && isvector(x));
 
-addParameter(ip, 'FrequencyRange', 1:47, @(x) isnumeric(x) && isvector(x) && all(x > 0));
+addParameter(ip, 'FrequencyRange', [1 47], @(x) isnumeric(x) && numel(x) >= 2);
 addParameter(ip, 'BandWidth', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
@@ -178,11 +177,6 @@ end
 
 if exist('izmy_gbweeg', 'file') ~= 2
     error('Required function "izmy_gbweeg.m" was not found on the MATLAB path.');
-end
-
-if exist('eegfilt', 'file') ~= 2
-    error(['Required function "eegfilt" was not found. ', ...
-           'Please add EEGLAB to your MATLAB path.']);
 end
 
 nSubjects = numel(files);
@@ -376,14 +370,8 @@ patternCounts_subj = cell(nFreq, nCh);
 
 for f = 1:nFreq
     cf = freqs(f);
-    lowCut = cf;
-    highCut = cf + opt.BandWidth;
-
-    % band-pass
-    filteredData = eegfilt(data, opt.SampleRate, lowCut, highCut);
-
     % complex wavelet transform
-    cwtData = izmy_gbweeg(filteredData, cf, opt.SampleRate, opt.WaveletCycles);
+    cwtData = izmy_gbweeg(data, cf, opt.SampleRate, opt.WaveletCycles);
 
     if size(cwtData,1) ~= nCh
         error('izmy_gbweeg returned unexpected channel dimension for file "%s".', fileName);
