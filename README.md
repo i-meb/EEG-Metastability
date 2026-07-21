@@ -162,7 +162,6 @@ calcMSISCE('./examples/sub_001.mat')
 | `Channels` | Number of channels to use | `63` |
 | `TimeIndices` | Time samples to analyze | `[]` (all samples) |
 | `FrequencyRange` | Target frequencies (Hz) | `1:47` |
-| `BandWidth` | Frequency interval (Hz) between adjacent target frequencies. | `1` |
 | `Threshold` | Phase-difference threshold (radians). Positive scalar in radians. A channel pair is classified as synchronized when the absolute wrapped phase difference is strictly smaller than this value. | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
 | `UseParallel` | Use `parfor` if available | `false` |
