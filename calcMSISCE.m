@@ -34,7 +34,6 @@ function results = calcMSISCE(inputPath, varargin)
 %   'Channels'          Number of channels analyzed. Default: 63
 %   'TimeIndices'       Time-sample indices. Default: [] (all samples)
 %   'FrequencyRange'    Wavelet center frequencies in Hz. Default: 1:47
-%   'BandWidth'         Pre-wavelet filter bandwidth in Hz. Default: 1
 %   'Threshold'         Absolute phase-difference threshold in radians.
 %                       Default: 1.2
 %   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
@@ -138,7 +137,6 @@ addParameter(ip, 'Channels', 63, @(x) isnumeric(x) && isscalar(x) && x >= 2);
 addParameter(ip, 'TimeIndices', [], @(x) isnumeric(x) && isvector(x));
 
 addParameter(ip, 'FrequencyRange', [1 47], @(x) isnumeric(x) && numel(x) >= 2);
-addParameter(ip, 'BandWidth', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 
@@ -276,7 +274,6 @@ results.metadata.filePattern = filePattern;
 results.metadata.outputDir = outputDir;
 results.metadata.dataVariable = dataVariable;
 results.metadata.dataField = dataField;
-results.metadata.bandWidth = opt.BandWidth;
 results.metadata.waveletCycles = opt.WaveletCycles;
 results.metadata.useParallel = logical(opt.UseParallel);
 results.metadata.generatedAt = datestr(now, 30);
