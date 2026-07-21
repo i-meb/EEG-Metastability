@@ -5,9 +5,7 @@
 ![Research Code](https://img.shields.io/badge/type-research%20code-informational)
 ![License](https://img.shields.io/badge/license-BSD%203--Clause-orange)
 
-MATLAB code for calculating EEG metastability-related measures, including channel-wise **Synchrony Coalition Entropy (SCE)** and **Metastability index (MSI)**, from preprocessed continuous EEG recordings.
-
-This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
+MATLAB code for calculating EEG metastability-related measures, including channel-wise **Synchrony Coalition Entropy (SCE)** and **Metastability index (MSI)**, from preprocessed continuous EEG recordings. This repository is intended for researchers who want to quantify frequency-specific phase-synchrony dynamics in EEG data using a relatively simple and transparent pipeline.
 <div align="left">
   <img src="./fig/pipeline.png" alt="Logo" width="400">
 </div>
@@ -18,20 +16,17 @@ This repository is intended for researchers who want to quantify frequency-speci
 This pipeline performs the following steps for each subject and frequency bin:
 
 1. Load preprocessed EEG data from `.mat` files
-2. Apply narrow-band filtering from \(cf\) to \(cf+\mathrm{BandWidth}\) Hz.
-3. Instantaneous phase was extracted (complex Gabor wavelet coefficients were used in this repository).
-4. Compute **network-wide Metastability index (MSI)**
-5. Build binary synchrony coalitions using a phase-difference threshold
-6. Compute **channel-wise Synchrony Coalition Entropy (SCE)**
-7. Save per-subject and per-frequency results
+2. Extract the instantaneous phase using the complex Gabor wavelet transform
+3. Compute network-wide **Metastability index (MSI)**
+4. Build binary synchrony coalitions using a phase-difference threshold
+5. Compute channel-wise **Synchrony Coalition Entropy (SCE)**
+6. Save results
 
 ---
 
-## Features
+## Optional features
 
-- Network-wide MSI output
-- Channel-wise SCE output
-- Batch processing of multiple subjects
+- Batch processing of multiple EEG files
 - Parallel processing support (`parfor`) 
 
 ---
@@ -42,9 +37,8 @@ This pipeline performs the following steps for each subject and frequency bin:
 Before running the toolbox, install the following:
 
 - MATLAB R2022b or later (recommended)
-- EEGLAB
 
-Add all required toolboxes to the MATLAB path.
+Add all required toolboxes to the MATLAB path. The maintainer has confirmed that using EEGLAB for preprocessing ensures good compatibility.
 
 ---
 
@@ -112,7 +106,7 @@ with shape:
 ```
 
 The input data should be continuous EEG.
-If needed, current source density (CSD) transformation should be applied externally during preprocessing. CSD is not included in this repository.
+If needed, band-pass filtering and current source density (CSD) transformation should be applied externally as preprocessing. They are not included in this repository.
 
 ## Default assumptions
 
@@ -129,7 +123,7 @@ If your dataset uses different names or formats, you can change them via functio
 
 A small toy dataset is provided for demonstration purposes.
 - `examples/sub_001.mat`: 30 seconds of actual data for one subject (https://doi.org/10.17605/OSF.IO/29QB5)
-- `examples/make_example_eeg.m`: you can make a dummy EEG data using this
+- `examples/make_example_eeg.m`: you can make a dummy EEG data
 
 The example dataset contains a MATLAB structure:
 
@@ -169,8 +163,8 @@ calcMSISCE('./examples/sub_001.mat')
 | `SampleRate` | Sampling rate in Hz | `1000` |
 | `Channels` | Number of channels to use | `63` |
 | `TimeIndices` | Time samples to analyze | `[]` (all samples) |
-| `FrequencyRange` | Target frequencies in Hz. Each frequency cf is used both as the lower cutoff of the pre-wavelet band-pass filter and as the frequency of the complex Gabor wavelet. | `1:47` |
-| `BandWidth` | Width of the pre-wavelet band-pass filter in Hz. For each target frequency cf, the filter passband is [cf, cf + BandWidth] Hz. | `1` |
+| `FrequencyRange` | Target frequencies (Hz) | `1:47` |
+| `BandWidth` | Frequency interval (Hz) between adjacent target frequencies. | `1` |
 | `Threshold` | Phase-difference threshold (radians). Positive scalar in radians. A channel pair is classified as synchronized when the absolute wrapped phase difference is strictly smaller than this value. | `1.2` |
 | `WaveletCycles` | Wavelet cycle parameter passed to `izmy_gbweeg` | `1` |
 | `UseParallel` | Use `parfor` if available | `false` |
@@ -202,20 +196,14 @@ The function returns a struct named `results` with the following fields.
 
 ## Method summary
 
-### 1. Filtering
-For each target frequency `cf`, band-pass filtered the signal between `cf` and `cf + BandWidth` using `eegfilt`.
+### 1. Phase extraction
+For each target frequency specified by `FrequencyRange`, the complex Gabor wavelet transform (`izmy_gbweeg.m`) is applied to each EEG channel, and the instantaneous phase is obtained from the resulting complex coefficients.
 
-### 2. Wavelet transform
-Computes complex wavelet coefficients for each channel using `izmy_gbweeg.m`.
-
-### 3. Phase extraction
-Instantaneous phase is extracted from the complex-valued wavelet output.
-
-### 4. MSI calculation
+### 2. MSI calculation
 MSI was calculated as the temporal variance of global phase synchrony, quantified by the Kuramoto order parameter.
 
-### 5. SCE calculation 
-For SCE calculation, synchrony coalition was made which is all pairwise phase differences are thresholded for each channel and time point:
+### 3. SCE calculation 
+Binary synchrony coalitions are constructed by thresholding pairwise phase differences for each channel and time point.
 
 - synchronized = `1` if `abs(phase difference) < threshold`
 - unsynchronized = `0` otherwise
@@ -274,7 +262,7 @@ EEG-Metastability/
 If you use this code in academic work, please cite:
 1. This repository (https://github.com/i-meb/EEG-Metastability)
 2. Shanahan M. Metastable chimera states in community-structured oscillator networks. Chaos. 2010;20(1):013108.
-3. Delorme A & Makeig S (2004) EEGLAB: an open-source toolbox for analysis of single-trial EEG dynamics, Journal of Neuroscience Methods 134:9-21.
+3. Lachaux JP et al., Measuring phase synchrony in brain signals. Human Brain Mapping. 2000.
 
 Please cite this repository using the metadata provided in [`CITATION.cff`](./CITATION.cff).
 
@@ -287,7 +275,9 @@ See the [LICENSE](LICENSE) file for the full license text.
 ---
 
 ## Contact
-Maintainer: Mebuki Izumiya mebuki@nips.ac.jp, Keiichi Kitajo kkitajo@nips.ac.jp
+Maintainer
+
+Mebuki Izumiya mebuki@nips.ac.jp, Keiichi Kitajo kkitajo@nips.ac.jp
             
             Division of Neural Dynamics
             National Institute for Physiological Sciences, National Institutes of Natural Sciences
