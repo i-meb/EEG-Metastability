@@ -22,9 +22,7 @@ This pipeline performs the following steps for each subject and frequency bin:
 5. Compute channel-wise **Synchrony Coalition Entropy (SCE)**
 6. Save results
 
----
-
-## Optional features
+Optional features:
 
 - Batch processing of multiple EEG files
 - Parallel processing support (`parfor`) 
