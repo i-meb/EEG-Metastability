@@ -544,6 +544,7 @@ for f = 1:nFreq
         progressCallback(progressData);
     end
 end
+end
 
 % =========================================================================
 % Format elapsed time for progress reporting
