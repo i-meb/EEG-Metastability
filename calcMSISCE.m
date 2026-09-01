@@ -219,7 +219,7 @@ progressLineLength = 0;
 progressLineOpen = false;
 progressQueue = [];
 progressCallback = [];
-progressCleanup = []; %#ok<NASGU>
+progressCleanup = [];
 
 if opt.Verbose
     progressCleanup = onCleanup(@finishProgressBar);
@@ -380,22 +380,28 @@ end
             completedFreq, ...
             nFreq);
 
+        previousLineLength = progressLineLength;
+
+        if progressLineOpen
+            backspaces = repmat(sprintf('\b'), 1, previousLineLength);
+            fprintf(1, '%s', backspaces);
+        end
+
         padding = repmat(' ', 1, ...
-            max(0, progressLineLength - numel(progressText)));
+            max(0, previousLineLength - numel(progressText)));
+        displayText = [progressText, padding];
 
-        fprintf('\r%s%s', progressText, padding);
+        fprintf(1, '%s', displayText);
 
-        progressLineLength = numel(progressText);
+        progressLineLength = numel(displayText);
         progressLineOpen = true;
 
-        % Preserve exactly one completed line per file.
         if completedFreq >= nFreq
-            fprintf('\n');
+            fprintf(1, '\n');
             progressLineLength = 0;
             progressLineOpen = false;
         end
     end
-
 
     function finishProgressBar
         % Keep subsequent command-window output on a new line after errors.
