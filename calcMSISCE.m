@@ -405,7 +405,6 @@ end
             progressLineOpen = false;
         end
     end
-end
 
 % =========================================================================
 % Helper function
