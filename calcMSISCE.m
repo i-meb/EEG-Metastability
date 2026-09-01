@@ -39,8 +39,8 @@ function results = calcMSISCE(inputPath, varargin)
 %   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
 %                       Default: 1
 %   'UseParallel'       Enable PARFOR. Default: false
-%   'Verbose'           Display messages and a command-window progress bar.
-%                       Default: true
+%　 'Verbose'           Display messages and a per-file frequency progress bar.
+%                    　 Default: true
 %
 %   ------
 %   OUTPUT
@@ -212,20 +212,16 @@ if opt.UseParallel
 end
 
 % -------------------------------------------------------------------------
-% Initialize progress reporting
+% Initialize per-file frequency progress reporting
 % -------------------------------------------------------------------------
-totalProgressSteps = nSubjects * nFreq;
-completedProgressSteps = 0;
+fileProgressCounts = zeros(nSubjects, 1);
 progressLineLength = 0;
 progressLineOpen = false;
-progressStartedAt = [];
 progressQueue = [];
 progressCallback = [];
 progressCleanup = []; %#ok<NASGU>
 
 if opt.Verbose
-    progressStartedAt = tic;
-    updateProgressBar([]);
     progressCleanup = onCleanup(@finishProgressBar);
 
     if opt.UseParallel
@@ -244,7 +240,7 @@ if opt.UseParallel
         [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh, ...
-            [], progressQueue);
+            s, [], progressQueue);
 
         MSI(s,1,:) = MSI_subj;
         nSCE(s,:,:) = nSCE_subj;
@@ -262,7 +258,7 @@ else
         [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
             files(s), inputDir, dataVariable, dataField, opt, freqs, nCh, ...
-            progressCallback, []);
+            s, progressCallback, []);
 
         MSI(s,1,:) = MSI_subj;
         nSCE(s,:,:) = nSCE_subj;
@@ -330,68 +326,85 @@ if opt.Verbose
 end
 
     function updateProgressBar(progressData)
-        % This callback runs on the client in both serial and parallel mode.
-        if ~isempty(progressData)
-            completedProgressSteps = min(totalProgressSteps, ...
-                completedProgressSteps + 1);
+        % Per-file progress over FrequencyRange.
+        %
+        % Serial mode:
+        %   One continuously updated line is shown for each file.
+        %
+        % Parallel mode:
+        %   Workers may report different files in interleaved order.
+        %   The current line is overwritten to keep command-window output
+        %   compact; completed files remain as one line.
+
+        if isempty(progressData)
+            return;
         end
 
-        fractionComplete = completedProgressSteps / totalProgressSteps;
+        fileIdx = progressData.fileIndex;
+        freqIdx = progressData.frequencyIndex;
+
+        % Use the reported frequency index rather than incrementing blindly.
+        % This prevents duplicate DataQueue callbacks from corrupting progress.
+        fileProgressCounts(fileIdx) = max(fileProgressCounts(fileIdx), freqIdx);
+
+        completedFreq = fileProgressCounts(fileIdx);
+        fractionComplete = completedFreq / nFreq;
         percentComplete = floor(100 * fractionComplete);
-        if completedProgressSteps == totalProgressSteps
+
+        if completedFreq >= nFreq
+            completedFreq = nFreq;
             percentComplete = 100;
         end
+
         progressBarWidth = 30;
         nFilled = min(progressBarWidth, ...
             floor(fractionComplete * progressBarWidth));
-        barText = [repmat('#', 1, nFilled), ...
+
+        if completedFreq >= nFreq
+            nFilled = progressBarWidth;
+        end
+
+        barText = [ ...
+            repmat('#', 1, nFilled), ...
             repmat('-', 1, progressBarWidth - nFilled)];
 
-        if isempty(progressData)
-            detailText = '';
-        else
-            detailText = sprintf(' | %s, %g Hz', ...
-                progressData.fileName, progressData.frequency);
-        end
+        progressText = sprintf( ...
+            '[%d/%d] %s | %g Hz [%s] %g Hz | %3d%% (%d/%d)', ...
+            fileIdx, ...
+            nSubjects, ...
+            progressData.fileName, ...
+            freqs(1), ...
+            barText, ...
+            freqs(end), ...
+            percentComplete, ...
+            completedFreq, ...
+            nFreq);
 
-        elapsedSeconds = toc(progressStartedAt);
-        if completedProgressSteps > 0 && ...
-                completedProgressSteps < totalProgressSteps
-            remainingSeconds = elapsedSeconds * ...
-                (totalProgressSteps - completedProgressSteps) / ...
-                completedProgressSteps;
-            timingText = sprintf(' | ETA %s', ...
-                formatElapsedTime(remainingSeconds));
-        elseif completedProgressSteps == totalProgressSteps
-            timingText = sprintf(' | elapsed %s', ...
-                formatElapsedTime(elapsedSeconds));
-        else
-            timingText = '';
-        end
+        padding = repmat(' ', 1, ...
+            max(0, progressLineLength - numel(progressText)));
 
-        progressText = sprintf('Progress [%s] %3.0f%% (%d/%d)%s%s', ...
-            barText, percentComplete, completedProgressSteps, ...
-            totalProgressSteps, detailText, timingText);
-        padding = repmat(' ', 1, max(0, progressLineLength - numel(progressText)));
         fprintf('\r%s%s', progressText, padding);
+
         progressLineLength = numel(progressText);
         progressLineOpen = true;
 
-        if completedProgressSteps == totalProgressSteps
+        % Preserve exactly one completed line per file.
+        if completedFreq >= nFreq
             fprintf('\n');
+            progressLineLength = 0;
             progressLineOpen = false;
         end
     end
+
 
     function finishProgressBar
         % Keep subsequent command-window output on a new line after errors.
         if progressLineOpen
             fprintf('\n');
+            progressLineLength = 0;
             progressLineOpen = false;
         end
     end
-
-end
 
 % =========================================================================
 % Helper function
@@ -399,7 +412,7 @@ end
 function [subjectId, fileName, MSI_subj, nSCE_subj, ...
           meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
           fileInfo, inputDir, dataVariable, dataField, opt, freqs, nCh, ...
-          progressCallback, progressQueue)
+          fileIndex, progressCallback, progressQueue)
 
 fileName = fileInfo.name;
 filePath = fullfile(inputDir, fileName);
@@ -512,10 +525,21 @@ for f = 1:nFreq
     meanSCE_subj(f) = mean(scePerChannel, 'omitnan');
 
     if ~isempty(progressQueue)
-        progressData = struct('fileName', fileName, 'frequency', cf);
+        progressData = struct( ...
+            'fileIndex', fileIndex, ...
+            'fileName', fileName, ...
+            'frequencyIndex', f, ...
+            'frequency', cf);
+
         send(progressQueue, progressData);
+
     elseif ~isempty(progressCallback)
-        progressData = struct('fileName', fileName, 'frequency', cf);
+        progressData = struct( ...
+            'fileIndex', fileIndex, ...
+            'fileName', fileName, ...
+            'frequencyIndex', f, ...
+            'frequency', cf);
+
         progressCallback(progressData);
     end
 end
