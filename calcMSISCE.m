@@ -39,7 +39,8 @@ function results = calcMSISCE(inputPath, varargin)
 %   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
 %                       Default: 1
 %   'UseParallel'       Enable PARFOR. Default: false
-%   'Verbose'           Display progress messages. Default: true
+%   'Verbose'           Display messages and a command-window progress bar.
+%                       Default: true
 %
 %   ------
 %   OUTPUT
@@ -211,13 +212,39 @@ if opt.UseParallel
 end
 
 % -------------------------------------------------------------------------
+% Initialize progress reporting
+% -------------------------------------------------------------------------
+totalProgressSteps = nSubjects * nFreq;
+completedProgressSteps = 0;
+progressLineLength = 0;
+progressLineOpen = false;
+progressStartedAt = [];
+progressQueue = [];
+progressCallback = [];
+progressCleanup = []; %#ok<NASGU>
+
+if opt.Verbose
+    progressStartedAt = tic;
+    updateProgressBar([]);
+    progressCleanup = onCleanup(@finishProgressBar);
+
+    if opt.UseParallel
+        progressQueue = parallel.pool.DataQueue;
+        afterEach(progressQueue, @updateProgressBar);
+    else
+        progressCallback = @updateProgressBar;
+    end
+end
+
+% -------------------------------------------------------------------------
 % Subject loop
 % -------------------------------------------------------------------------
 if opt.UseParallel
     parfor s = 1:nSubjects
         [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
-            files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
+            files(s), inputDir, dataVariable, dataField, opt, freqs, nCh, ...
+            [], progressQueue);
 
         MSI(s,1,:) = MSI_subj;
         nSCE(s,:,:) = nSCE_subj;
@@ -234,7 +261,8 @@ else
     for s = 1:nSubjects
         [subjectIds(s), fileNames{s}, MSI_subj, nSCE_subj, ...
             meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
-            files(s), inputDir, dataVariable, dataField, opt, freqs, nCh);
+            files(s), inputDir, dataVariable, dataField, opt, freqs, nCh, ...
+            progressCallback, []);
 
         MSI(s,1,:) = MSI_subj;
         nSCE(s,:,:) = nSCE_subj;
@@ -301,6 +329,68 @@ if opt.Verbose
     fprintf('Done.\n');
 end
 
+    function updateProgressBar(progressData)
+        % This callback runs on the client in both serial and parallel mode.
+        if ~isempty(progressData)
+            completedProgressSteps = min(totalProgressSteps, ...
+                completedProgressSteps + 1);
+        end
+
+        fractionComplete = completedProgressSteps / totalProgressSteps;
+        percentComplete = floor(100 * fractionComplete);
+        if completedProgressSteps == totalProgressSteps
+            percentComplete = 100;
+        end
+        progressBarWidth = 30;
+        nFilled = min(progressBarWidth, ...
+            floor(fractionComplete * progressBarWidth));
+        barText = [repmat('#', 1, nFilled), ...
+            repmat('-', 1, progressBarWidth - nFilled)];
+
+        if isempty(progressData)
+            detailText = '';
+        else
+            detailText = sprintf(' | %s, %g Hz', ...
+                progressData.fileName, progressData.frequency);
+        end
+
+        elapsedSeconds = toc(progressStartedAt);
+        if completedProgressSteps > 0 && ...
+                completedProgressSteps < totalProgressSteps
+            remainingSeconds = elapsedSeconds * ...
+                (totalProgressSteps - completedProgressSteps) / ...
+                completedProgressSteps;
+            timingText = sprintf(' | ETA %s', ...
+                formatElapsedTime(remainingSeconds));
+        elseif completedProgressSteps == totalProgressSteps
+            timingText = sprintf(' | elapsed %s', ...
+                formatElapsedTime(elapsedSeconds));
+        else
+            timingText = '';
+        end
+
+        progressText = sprintf('Progress [%s] %3.0f%% (%d/%d)%s%s', ...
+            barText, percentComplete, completedProgressSteps, ...
+            totalProgressSteps, detailText, timingText);
+        padding = repmat(' ', 1, max(0, progressLineLength - numel(progressText)));
+        fprintf('\r%s%s', progressText, padding);
+        progressLineLength = numel(progressText);
+        progressLineOpen = true;
+
+        if completedProgressSteps == totalProgressSteps
+            fprintf('\n');
+            progressLineOpen = false;
+        end
+    end
+
+    function finishProgressBar
+        % Keep subsequent command-window output on a new line after errors.
+        if progressLineOpen
+            fprintf('\n');
+            progressLineOpen = false;
+        end
+    end
+
 end
 
 % =========================================================================
@@ -308,7 +398,8 @@ end
 % =========================================================================
 function [subjectId, fileName, MSI_subj, nSCE_subj, ...
           meanSCE_subj, patternValues_subj, patternCounts_subj] = processOneFile( ...
-          fileInfo, inputDir, dataVariable, dataField, opt, freqs, nCh)
+          fileInfo, inputDir, dataVariable, dataField, opt, freqs, nCh, ...
+          progressCallback, progressQueue)
 
 fileName = fileInfo.name;
 filePath = fullfile(inputDir, fileName);
@@ -420,11 +511,31 @@ for f = 1:nFreq
     nSCE_subj(:, f) = scePerChannel;
     meanSCE_subj(f) = mean(scePerChannel, 'omitnan');
 
-    if opt.Verbose
-        fprintf('[%s] %g Hz done\n', fileName, cf);
+    if ~isempty(progressQueue)
+        progressData = struct('fileName', fileName, 'frequency', cf);
+        send(progressQueue, progressData);
+    elseif ~isempty(progressCallback)
+        progressData = struct('fileName', fileName, 'frequency', cf);
+        progressCallback(progressData);
     end
 end
 
+end
+
+% =========================================================================
+% Format elapsed time for progress reporting
+% =========================================================================
+function text = formatElapsedTime(totalSeconds)
+totalSeconds = max(0, round(totalSeconds));
+hours = floor(totalSeconds / 3600);
+minutes = floor(mod(totalSeconds, 3600) / 60);
+seconds = mod(totalSeconds, 60);
+
+if hours > 0
+    text = sprintf('%d:%02d:%02d', hours, minutes, seconds);
+else
+    text = sprintf('%02d:%02d', minutes, seconds);
+end
 end
 
 % =========================================================================
