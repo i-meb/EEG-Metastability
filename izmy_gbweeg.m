@@ -67,7 +67,7 @@ function h = izmy_gbweeg(data, freq, sample_rate, nco)
 %   This file is part of EEG-Metastability and is distributed under the
 %   BSD 3-Clause License. See the LICENSE file in the repository root.
 %
-%   See also calcMSISCE, conv.
+%   See also calcMSISCE.
 
 [channel, nTime] = size(data);
 
