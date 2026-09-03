@@ -137,7 +137,7 @@ addParameter(ip, 'SampleRate', 1000, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'Channels', 63, @(x) isnumeric(x) && isscalar(x) && x >= 2);
 addParameter(ip, 'TimeIndices', [], @(x) isnumeric(x) && isvector(x));
 
-addParameter(ip, 'FrequencyRange', [1 47], @(x) isnumeric(x) && numel(x) >= 2);
+addParameter(ip, 'FrequencyRange', [1:47], @(x) isnumeric(x) && numel(x) >= 2);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
 
@@ -219,11 +219,8 @@ progressLineLength = 0;
 progressLineOpen = false;
 progressQueue = [];
 progressCallback = [];
-progressCleanup = [];
 
 if opt.Verbose
-    progressCleanup = onCleanup(@finishProgressBar);
-
     if opt.UseParallel
         progressQueue = parallel.pool.DataQueue;
         afterEach(progressQueue, @updateProgressBar);
@@ -322,8 +319,10 @@ if opt.SaveResults
 end
 
 if opt.Verbose
+    finishProgressBar();
     fprintf('Done.\n');
 end
+
 
     function updateProgressBar(progressData)
         % Per-file progress over FrequencyRange.
@@ -424,7 +423,9 @@ function [subjectId, fileName, MSI_subj, nSCE_subj, ...
 fileName = fileInfo.name;
 filePath = fullfile(inputDir, fileName);
 
-tmp = load(filePath);
+% Load only the requested top-level variable to avoid reading unrelated
+% variables from large MAT files.
+tmp = load(filePath, dataVariable);
 
 if ~isfield(tmp, dataVariable)
     error('File "%s" does not contain variable "%s".', fileName, dataVariable);
@@ -448,18 +449,15 @@ if size(data,1) < nCh
         fileName, size(data,1), nCh);
 end
 
-data = data(1:nCh, :);
-
 if isempty(opt.TimeIndices)
-    timeIdx = 1:size(data,2);
+    data = data(1:nCh, :);
 else
     timeIdx = opt.TimeIndices(:)';
     if max(timeIdx) > size(data,2)
         error('TimeIndices exceed data length in file "%s".', fileName);
     end
+    data = data(1:nCh, timeIdx);
 end
-
-data = data(:, timeIdx);
 
 tok = regexp(fileName, '\d+', 'match');
 if isempty(tok)
@@ -475,6 +473,7 @@ meanSCE_subj = nan(1, nFreq);
 
 patternValues_subj = cell(nFreq, nCh);
 patternCounts_subj = cell(nFreq, nCh);
+scePerChannel = nan(nCh, 1);
 
 for f = 1:nFreq
     cf = freqs(f);
@@ -495,16 +494,11 @@ for f = 1:nFreq
     % ---------------------------------------------------------------------
     % SCE: channel-wise synchrony coalition entropy
     % ---------------------------------------------------------------------
-    numDataPoints = size(cwtData, 2);
-    cwt3d = reshape(cwtData, [nCh, 1, numDataPoints]);
-    cwt3dRep = repmat(cwt3d, [1, nCh, 1]);
-    phaseDiff = angle(cwt3dRep ./ permute(cwt3dRep, [2, 1, 3]));
-
-    binaryData = abs(phaseDiff) < opt.Threshold;
-    scePerChannel = nan(nCh, 1);
-
     for ch = 1:nCh
-        coalition = squeeze(binaryData(ch,:,:));   % [nCh x time]
+        % Element-wise identical to selecting phaseDiff(ch,:,:) from the
+        % former [nCh x nCh x time] array, while allocating only one
+        % [nCh x time] coalition at a time.
+        coalition = abs(angle(cwtData(ch,:) ./ cwtData)) < opt.Threshold;
         coalition(ch,:) = [];                      % remove self-channel
         nPartners = size(coalition, 1);
 
@@ -522,7 +516,7 @@ for f = 1:nFreq
 
         % number of possible coalition states = 2^(nPartners)
         % therefore max entropy in bits = nPartners
-        scePerChannel(ch) = sceBits / nPartners;   
+        scePerChannel(ch) = sceBits / nPartners;
 
         patternValues_subj{f, ch} = patVals;
         patternCounts_subj{f, ch} = patCounts;
@@ -549,22 +543,6 @@ for f = 1:nFreq
 
         progressCallback(progressData);
     end
-end
-end
-
-% =========================================================================
-% Format elapsed time for progress reporting
-% =========================================================================
-function text = formatElapsedTime(totalSeconds)
-totalSeconds = max(0, round(totalSeconds));
-hours = floor(totalSeconds / 3600);
-minutes = floor(mod(totalSeconds, 3600) / 60);
-seconds = mod(totalSeconds, 60);
-
-if hours > 0
-    text = sprintf('%d:%02d:%02d', hours, minutes, seconds);
-else
-    text = sprintf('%02d:%02d', minutes, seconds);
 end
 end
 
