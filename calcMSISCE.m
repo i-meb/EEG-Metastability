@@ -139,7 +139,8 @@ addParameter(ip, 'TimeIndices', [], @(x) isnumeric(x) && isvector(x));
 
 addParameter(ip, 'FrequencyRange', [1:47], @(x) isnumeric(x) && numel(x) >= 2);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
-addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isscalar(x) && x > 0);
+addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isreal(x) && isvector(x) && ...
+         ~isempty(x) && all(isfinite(x(:))) && all(x(:) > 0));
 
 addParameter(ip, 'UseParallel', false, @(x) islogical(x) || isnumeric(x));
 addParameter(ip, 'Verbose', true, @(x) islogical(x) || isnumeric(x));
@@ -181,6 +182,15 @@ end
 nSubjects = numel(files);
 freqs = opt.FrequencyRange(:)';
 nFreq = numel(freqs);
+
+cycles = double(opt.WaveletCycles(:).');
+if isscalar(cycles)
+    cycles = repmat(cycles, 1, nFreq);
+elseif numel(cycles) ~= nFreq
+    error('WaveletCycles must be scalar or have one value per FrequencyRange element.');
+end
+opt.WaveletCyclesPerFrequency = cycles;
+
 nCh = opt.Channels;
 
 if opt.Verbose
@@ -296,6 +306,7 @@ results.metadata.outputDir = outputDir;
 results.metadata.dataVariable = dataVariable;
 results.metadata.dataField = dataField;
 results.metadata.waveletCycles = opt.WaveletCycles;
+results.metadata.waveletCyclesPerFrequency = opt.WaveletCyclesPerFrequency;
 results.metadata.useParallel = logical(opt.UseParallel);
 results.metadata.generatedAt = datestr(now, 30);
 results.metadata.msiDefinition = 'Temporal variance of network-wide phase synchrony';
@@ -478,7 +489,7 @@ scePerChannel = nan(nCh, 1);
 for f = 1:nFreq
     cf = freqs(f);
     % complex wavelet transform
-    cwtData = izmy_gbweeg(data, cf, opt.SampleRate, opt.WaveletCycles);
+    cwtData = izmy_gbweeg(data, cf, opt.SampleRate, opt.WaveletCyclesPerFrequency(f));
 
     if size(cwtData,1) ~= nCh
         error('izmy_gbweeg returned unexpected channel dimension for file "%s".', fileName);
