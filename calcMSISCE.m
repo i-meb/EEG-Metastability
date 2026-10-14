@@ -37,7 +37,7 @@ function results = calcMSISCE(inputPath, varargin)
 %   'Threshold'         Absolute phase-difference threshold in radians.
 %                       Default: 1.2
 %   'WaveletCycles'     Wavelet duration parameter passed to izmy_gbweeg.
-%                       Default: 1
+%                       Default: 3
 %   'UseParallel'       Enable PARFOR. Default: false
 %　 'Verbose'           Display messages and a per-file frequency progress bar.
 %                    　 Default: true
@@ -139,7 +139,7 @@ addParameter(ip, 'TimeIndices', [], @(x) isnumeric(x) && isvector(x));
 
 addParameter(ip, 'FrequencyRange', [1:47], @(x) isnumeric(x) && numel(x) >= 2);
 addParameter(ip, 'Threshold', 1.2, @(x) isnumeric(x) && isscalar(x) && x > 0);
-addParameter(ip, 'WaveletCycles', 1, @(x) isnumeric(x) && isreal(x) && isvector(x) && ...
+addParameter(ip, 'WaveletCycles', 3, @(x) isnumeric(x) && isreal(x) && isvector(x) && ...
          ~isempty(x) && all(isfinite(x(:))) && all(x(:) > 0));
 
 addParameter(ip, 'UseParallel', false, @(x) islogical(x) || isnumeric(x));
